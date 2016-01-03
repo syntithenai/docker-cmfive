@@ -17,6 +17,6 @@ cd $DIR/www/cmfive/system; php composer.phar update; cd -
 
 # start composition of dock images
 cd $DIR
-docker build -t syntithenai/cmfive .
 docker-compose stop
+docker build -t syntithenai/cmfive .
 docker-compose up -d
