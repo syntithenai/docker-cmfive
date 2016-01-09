@@ -3,19 +3,19 @@ web:
   ports:
     - "80"
   volumes:
-    - ./www/cmfive:/var/www/html
+    - .\www:/var/www/html
     - ./src/nginx.default:/etc/nginx/sites-enabled/default
   links:
     - php
   environment:
-   - VIRTUAL_HOST=me.docker
+   - VIRTUAL_HOST=blah.d
 php:
   image: nmcteam/php56
   ports:
     - "9000:9000"
   volumes:
     - ./src/php-fpm.conf:/etc/php5/fpm/php-fpm.conf
-    - ./www/cmfive:/var/www/html
+    - .\www:/var/www/html
   links:
     - db
 db:

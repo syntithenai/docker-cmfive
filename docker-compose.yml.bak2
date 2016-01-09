@@ -8,7 +8,7 @@ web:
   links:
     - php
   environment:
-   - VIRTUAL_HOST=me.docker
+   - VIRTUAL_HOST=golly.d
 php:
   image: nmcteam/php56
   ports:

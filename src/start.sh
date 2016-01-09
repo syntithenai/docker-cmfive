@@ -1,2 +1,2 @@
 #!/bin/sh
-/etc/init.d/nginx start 
+service nginx start

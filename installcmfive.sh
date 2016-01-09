@@ -15,9 +15,3 @@ mkdir $DIR/www/cmfive/storage/session
 # update composer libraries now  !!! this should be done in the VM image context
 cd $DIR/www/cmfive/system; php composer.phar update; cd -
 
-# start composition of dock images
-cd $DIR
-docker-compose stop
-docker build -t syntithenai/cmfive .
-export VIRTUAL_HOST=c.docker
-docker-compose up -d
