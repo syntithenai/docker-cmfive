@@ -1,21 +1,29 @@
-web:
+cmfivesharedvolumes:
+  image: syntithenai/cmfive
+  volumes: 
+    - /var/www
+cmfiveweb:
   image: syntithenai/cmfive
   ports:
     - "80"
+    - "2222:22"
+  volumes_from:
+    - cmfivesharedvolumes
   volumes:
-    - ./www/cmfive:/var/www/html
     - ./src/nginx.default:/etc/nginx/sites-enabled/default
   links:
+    - db
     - php
   environment:
-   - VIRTUAL_HOST=me.docker
+   - VIRTUAL_HOST=cmfive.docker
 php:
   image: nmcteam/php56
   ports:
-    - "9000:9000"
+    - "9000"
+  volumes_from:
+    - cmfivesharedvolumes
   volumes:
     - ./src/php-fpm.conf:/etc/php5/fpm/php-fpm.conf
-    - ./www/cmfive:/var/www/html
   links:
     - db
 db:
@@ -24,6 +32,7 @@ db:
     - "3306:3306"
   volumes:
    - /var/lib/mysql
+   - /var/run/mysqld
    - ./db-dump/install.sql:/install.sql
   environment:
    - MYSQL_USER=admin
