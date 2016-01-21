@@ -19,6 +19,7 @@ docker 101
             apt-get install docker.io docker-engine
         Windows
             There are binary images for windows and mac that include the whole toolbox of - docker machine, docker compose, docker swarm and kitematic GUI.
+            You can login to the virtual box machine using ssh to localhost with user 
         https://docs.docker.com/engine/installation/
     RUN
         kitematic
@@ -91,3 +92,9 @@ docker 101
             docker rmi $(docker images -f "dangling=true" -q)
             docker run -v /var/run/docker.sock:/var/run/docker.sock -v /var/lib/docker:/var/lib/docker --rm martin/docker-cleanup-volumes
         <https://github.com/meltwater/docker-cleanup>
+
+
+
+https://github.com/wsargent/docker-cheat-sheet
+http://jonathan.bergknoff.com/journal/building-good-docker-images
+http://crosbymichael.com/dockerfile-best-practices.html
