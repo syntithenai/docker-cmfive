@@ -133,7 +133,7 @@ fi
 
 echo "=> Starting MySQL ..."
 StartMySQL
-//tail -F $LOG &
+tail -F $LOG &
 
 # Create admin user and pre create database
 if [ -f /var/lib/mysql/.EMPTY_DB ]; then
@@ -187,4 +187,4 @@ if [ -n "${REPLICATION_SLAVE}" ]; then
     fi
 fi
 
-exit 0
+fg

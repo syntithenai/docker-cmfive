@@ -12,7 +12,7 @@ date_default_timezone_set('Australia/Sydney');
 //========== Database Configuration ==========================
 
 Config::set("database", array(
-    "hostname"  => "db",
+    "hostname"  => "localhost",
     "username"  => "admin",
     "password"  => "admin",
     "database"  => "cmfive",

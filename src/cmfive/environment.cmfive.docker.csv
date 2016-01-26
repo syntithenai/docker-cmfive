@@ -5,8 +5,8 @@ testIncludePath,/var/www/cmfive
 testSharedSupportPath,/var/www/cmfive/system/tests/_support
 cmFivePath,/var/www/cmfive
 driver,mysql
-hostname,db
+hostname,localhost
 username,admin
 password,admin
 database,cmfive
-phantomjs,/var/www/testrunner/phantomjs
+phantomjs,/usr/bin/phantomjs

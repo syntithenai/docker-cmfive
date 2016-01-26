@@ -16,11 +16,12 @@ docker 101
                     shipyard
     INSTALL
         Linux
+			https://docs.docker.com/engine/installation/
             apt-get install docker.io docker-engine
-        Windows
+        Windows/Mac
             There are binary images for windows and mac that include the whole toolbox of - docker machine, docker compose, docker swarm and kitematic GUI.
-            You can login to the virtual box machine using ssh to localhost with user 
-        https://docs.docker.com/engine/installation/
+            You can login to the virtual box machine using ssh to localhost with user  docker pw tcuser
+			https://docs.docker.com/engine/installation/windows/
     RUN
         kitematic
             Fire up kitematic, click new to create a new container then search for hello-world-nginx and click create.
@@ -49,8 +50,7 @@ docker 101
             phusion.github.io > Baseimage-docker > #intro <http://phusion.github.io/baseimage-docker/#intro>
             REBUILD
                 docker-compose stop;docker build -t syntithenai/cmfive .;docker rm $(docker ps -a -q);docker-compose up -d;docker exec -it dockercmfive_web_1 bash
-        o
-            COMPOSING CONTAINERS
+        COMPOSING CONTAINERS
                 docker-compose
                     docker-compose - manages multiple containers and their configuration. Eg spin up mysql, php ,nginx in three containers will port mappings from a config file.
                     stop this compose suite, rebuild the cmfive image, rm any persistent volumes, restart composer suite, run a shell
