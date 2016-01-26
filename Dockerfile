@@ -61,6 +61,7 @@ ADD ./src/nginx/run /etc/service/nginx/run
 ADD ./src/nginx/default /etc/nginx/sites-enabled/default
 # php
 ADD ./src/nginx/phpfpm.sh /etc/service/phpfpm/run
+ADD ./src/phpMyAdmin/ /var/www/cmfive/phpMyAdmin
 # cmfive
 ADD ./src/cmfive/config.php /var/www/cmfive/config.php
 # testrunner

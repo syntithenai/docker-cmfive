@@ -59,6 +59,9 @@ docker 101
                 NETWORKS
                 dockercompose-ui image
                     GUI for managing containers based on docker-compose files
+                   run compose UI
+docker run     --name docker-compose-ui     -p 5000:5000     -v /Users/User/docks:/opt/docker-compose-projects:rw     -v /var/run/docker.sock:/var/run/docker.sock     francescou/docker-compose-ui:1.0.RC1
+
     DEPLOY
         VIRTUAL HOSTING
             1. A DNS proxy will allow wildcard domain configuration (as compared to tweaking hosts entry). Acrylic DNS proxy work well on windows.
@@ -98,3 +101,4 @@ docker 101
 https://github.com/wsargent/docker-cheat-sheet
 http://jonathan.bergknoff.com/journal/building-good-docker-images
 http://crosbymichael.com/dockerfile-best-practices.html
+
