@@ -3,20 +3,20 @@ MAINTAINER Steve Ryan <steve@2pisoftware.com>
 # BASE PACKAGES INSTALL
 RUN add-apt-repository ppa:nginx/stable
 RUN add-apt-repository -y ppa:ondrej/php5
-RUN apt-get update && apt-get install -y --force-yes  python-software-properties php5-cli git nginx php5-mysql curl php5-curl phantomjs
-RUN DEBIAN_FRONTEND="noninteractive" apt-get update; apt-get install -y --force-yes php5-cli php5-fpm php5-mysql php5-pgsql php5-sqlite php5-curl\
-		       php5-gd php5-mcrypt php5-intl php5-imap php5-tidy
+RUN apt-get update && apt-get install -y --force-yes  nano python-software-properties php5-cli git nginx php5-mysql curl php5-curl phantomjs git
+RUN DEBIAN_FRONTEND="noninteractive" apt-get update; apt-get install -y --force-yes php5-cli php5-fpm php5-mysql php5-pgsql php5-sqlite php5-curl php5-gd php5-mcrypt php5-intl php5-imap php5-tidy
 
 # CONFIGURE NGINX
 RUN mkdir -p /var/log/nginx;  echo "daemon off;" >> /etc/nginx/nginx.conf; ln -sf /dev/stdout /var/log/nginx/access.log; ln -sf /dev/stderr /var/log/nginx/error.log
 EXPOSE 80 443
 
+
 # CMFIVE INSTALL 
-RUN git clone -b 0-8-0-BRANCH https://github.com/2pisoftware/cmfive.git /var/www/cmfive
+RUN git clone --depth=10  -b 0-8-0-BRANCH https://github.com/2pisoftware/cmfive.git /var/www/cmfive
 RUN mkdir -p /var/www/cmfive/storage; mkdir -p /var/www/cmfive/storage/logs; mkdir -p /var/www/cmfive/storage/backups; mkdir -p /var/www/cmfive/storage/session; cd /var/www/cmfive/system; php composer.phar update; chown -R www-data.www-data /var/www/cmfive; chmod -R 755 /var/www/cmfive
 
 # TEST RUNNER INSTALL
-RUN git clone https://github.com/2pisoftware/testrunner.git /var/www/testrunner; chown -R www-data.www-data /var/www/testrunner; chmod -R 755 /var/www/testrunner; cd /var/www/testrunner; php composer.phar update;
+RUN git clone --depth=10 https://github.com/2pisoftware/testrunner.git /var/www/testrunner; chown -R www-data.www-data /var/www/testrunner; chmod -R 755 /var/www/testrunner; cd /var/www/testrunner; php composer.phar update;
 
 # SSH ACCESS
 RUN rm -f /etc/service/sshd/down
@@ -25,8 +25,6 @@ RUN /usr/sbin/enable_insecure_key
 EXPOSE 22
 
 # MYSQL INSTALL AND SETUP
-RUN ls
-
 RUN apt-get update && \
     apt-get -yq install mysql-server-5.5 pwgen && \
     rm -rf /var/lib/apt/lists/* && \
@@ -74,6 +72,12 @@ ADD ./src/mysql/import_sql.sh /import_sql.sh
 # todo generate this
 ADD ./src/cmfive/install.sql /install.sql
 ADD ./src/mysql/run.sh /etc/service/mysql/run
+# PHPMYADMIN
+ADD ./src/phpMyAdmin /var/www/cmfive/phpmyadmin
+#CODIAD
+ADD ./src/codiad /var/www/cmfive/codiad
+# WIKI
+RUN git clone https://github.com/2pisoftware/cmfive-wiki.git /var/www/wiki; ln -s /var/www/wiki/wiki /var/www/cmfive/modules/wiki
 
 # executable service scripts
 RUN chmod +x        /etc/service/phpfpm/run

@@ -1,9 +1,11 @@
 cmfivecomplete:
   image: 2pisoftware/cmfive
+# expose web, ssh and mysql
   ports:
     - "80"
     - "2222:22"
     - "3306:3306"
   environment:
+# tell jwilder/nginx-proxy  our domain name
    - VIRTUAL_HOST=cmfive.docker
 
