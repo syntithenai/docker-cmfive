@@ -1,14 +1,14 @@
 #Cmfive Developer workflow with Docker
-##    Introduction
+## Introduction
 As an organisation there are benefits to the development team working with standardised docker images. 
 To that end we have have created a cmfive developer toolkit using docker.
 
--  We have a [docker.io image](https://hub.docker.com/r/2pisoftware/cmfive/) that enables a very easy standardised cmfive installation. 
--  We have a [git repository](https://github.com/syntithenai/docker-cmfive) that provides files to build the cmfive docker image. 
--  The image also includes browser based tools for file management, git and mysql.
+- We have a [docker.io image](https://hub.docker.com/r/2pisoftware/cmfive/) that enables a very easy standardised cmfive installation. 
+- We have a [git repository](https://github.com/syntithenai/docker-cmfive) that provides files to build the cmfive docker image. 
+- The image also includes browser based tools for file management, git and mysql.
 
 This document provides details on working with the image and repository.
-##    Getting started
+## Getting started
 
 - [Install docker](https://docs.docker.com/engine/installation) and kitematic GUI
 - Use Kitematic to install and run a cmfive container
@@ -16,19 +16,17 @@ This document provides details on working with the image and repository.
   - This is a very large download ~400MB!! 
   - ![kitematic install cmfive](kitematic_installcmfive)
 - Alternative install and run the cmfive image
-	- You can execute in the docker powershell
-			docker run -e VIRTUAL_HOST=cmfive.docker  -p 2222:22 -p 3306:3306 -P -v /var/www -d --name=cmfive 2pisoftware/cmfive
-	- You can use docker compose file in the repository
-			cd /repository
-			docker-compose up -d
+ - You can execute in the docker powershell
+   docker run -e VIRTUAL_HOST=cmfive.docker -p 2222:22 -p 3306:3306 -P -v /var/www -d --name=cmfive 2pisoftware/cmfive
+ - You can use docker compose file in the repository
+   cd /repository
+   docker-compose up -d
 - Another alternative is to build the image using the git repository.
-	- ` docker build -t 2pisoftware/cmfive /respository `
-	- then use docker run as described above
+ - ` docker build -t 2pisoftware/cmfive /respository `
+ - then use docker run as described above
 
 
-##        Access to the container
-There are variety of approaches to interacting with a container.
-Container persistence.
+##Container persistence.
 Docker has images, containers and volumes.
 An image is a base filesystem for a container.
 
@@ -36,99 +34,126 @@ A container is a running (or stopped) instance.
 Containers reset their filesystem to the base image on restart.
 
 A volume is is a storage folder that will persist between container restarts.
-Volumes are destroyed when their parent container is destroyed.
-Volumes can be created in the build or with docker run.
-Volumes are stored in the master linux filesystem so virtual box for windows/mac.
-It is possible to mount a local filesystem onto a volume using kitematic or docker run -v src:target. In this case the content of the mount point persists even if the container is destroyed and can be remounted to a new container.
 
-It is also possibly to explicitly create volumes usering docker volumes create name. This approach allows the volume to be mounted anywhere in a target image with docker run -v VOLNAME:/destination/in/target.
-- The recommend approach is using volume mappings to the host
-	For example, to work with /var/www directly on your host system 
-		- Copy the www directory to the host system using scp or docker cp.
-		- Remap the host volume back into the container.
-			- Click change in the kitematic volume settings for the /var/www volume and select the location you copied the original files as the host path.
-			- Alternatively use  
-					docker run -v <\\c\host path>:/var/www <image>.
-	 By using volume mappings, any changes to files are not lost if the container is destroyed for a base image update. This can also be achieved using volumes or data containers.
-- using the website
-	- click the link in the kitematic web preview. Cmfive login credentials admin/admin.
-	- the website also provides user interfaces for
-		- file management using codiad. http://cmfive.docker/codiad with login credentials admin/admin.
-		- git management using ungit. http://ungit.docker/ with no authentication required.
-		- mysql management using phpmyadmin. http://cmfive.docker/phpmyadmin with login credentials admin/admin.
-- using docker
-	- run a shell inside the container
-			docker exec -it <container name> bash
-	- copy files from/to the container
-			docker cp <container:src> <container:dest>
+- Volumes are destroyed when their parent container is destroyed.
+- Volumes can be defined in the build or with docker run.
+- Volumes are stored in the master linux filesystem so inside virtual box for windows/mac.
+- Volumes can be lost when docker engine restarts.
+
+It is possible to mount a volume onto a local filesystem using kitematic or `docker run -v src:target`. In this case the content of the mount point persists no  matter what.
+This approach allows platform based tools access to the filesystem eg sourcetree or eclipse.
+
+It is also possibly to explicitly create Data Volumes using   
+  `  docker volumes create -name <volume name>  `  
+This approach allows the volume to be mounted anywhere in a target image with  
+   `docker run -v <volume name>`  
+
+## Access to the container
+There are variety of approaches to interacting with a container.
+
+- The recommended approach is using volume mappings to the host.  By using volume mappings, any changes to files are not lost if the container is destroyed for a base image update. This can also be achieved using data volumes.
+
+ For example, to work with /var/www directly on your host system 
+
+  - Copy the www directory to the host system using scp or `docker cp src target`.
+  - Remap the host volume back into the container.
+   - Click change in the kitematic volume settings for the /var/www volume and select the location you copied the original files as the host path.
+   - Alternatively use 
+     `docker run -v <\\c\host path>:/var/www <image>`.
+ 
+- Using the website 
+ - click the link in the kitematic web preview. Cmfive login credentials admin/admin.
+ - the website also provides user interfaces for
+    - file management using codiad. http://cmfive.docker/codiad with login credentials admin/admin.
+    - git management using ungit. http://ungit.docker/ with no authentication required.
+    - mysql management using phpmyadmin. http://cmfive.docker/phpmyadmin with login credentials admin/admin.
+- Using docker
+ - run a shell inside the container
+     `docker exec -it <container name> bash`
+ - copy files from/to the container
+   `docker cp <container:src> <container:dest>`
 - using ssh/scp
-	- To enable ssh, use kinetic to map a port or ensure your run command maps port 22 to a host port.
-	- To login as root, use the key file docker.ppk from the docker-cmfive repository.
+ - To enable ssh, use kinetic to map a port or ensure your run command maps port 22 to a host port.
+ - To login as root, use the key file docker.ppk from the docker-cmfive repository.
 - using mysql exposed port 3306 with a sql client like HeidiSql
-##		Virtual hosting
+
+##	Virtual hosting
 As you add containers it can be handy to refer to them by domain name.
 
-- A DNS proxy will allow wildcard domain configuration (as compared to tweaking hosts entry). Acrylic DNS proxy works well on windows.  
+1. A DNS proxy will allow wildcard domain configuration (as compared to tweaking hosts entry). Acrylic DNS proxy works well on windows. 
 DNS entries need to point to the virtual box IP address on windows.
-- Install and run nginx-proxy docker image using DOCKER CLI powershell.
-		docker run -d -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock:ro jwilder/nginx-proxy
-- Restart your container with VIRTUAL_HOST set as an environment veriable and nginx-proxy will pick up the changes and detect the container port then create virtual host entries for nginx.
-		docker run -e VIRTUAL_HOST=foo.bar.com  ...
+2. Install and run nginx-proxy docker image using DOCKER CLI powershell. 
+  `docker run -d -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock:ro jwilder/nginx-proxy`
+3. Restart your container with VIRTUAL_HOST set as an environment veriable and nginx-proxy will pick up the changes and detect the container port then create virtual host entries for nginx.
+  `docker run -e VIRTUAL_HOST=foo.bar.com ...`
 For more details see https://hub.docker.com/r/jwilder/nginx-proxy <https://hub.docker.com/r/jwilder/nginx-proxy>
-##        Security
-These images are hopelessly insecure with published default passwords for important services and a published key for root login.  
 
-DO NOT EXPOSE any of the docker network interfaces to the internet!!
-##        Developing with the image
+## Security
+These images are hopelessly insecure with published default passwords for important services and a published key for root login. 
+
+**DO NOT EXPOSE any of the docker network interfaces to the internet!!**
+## Developing with the image
 ###Filesystem Layout
-	When using volume mapping, you can use any tools you like to edit files in the mapped volume from eclipse to vi, git to sourcetree.
-	The web root is /var/www which is exported as a volume in the build.
+ When using volume mapping, you can use any tools you like to edit files in the mapped volume from eclipse to vi, git to sourcetree.
+ The web root is /var/www which is exported as a volume in the build.
 
 ###Codiad IDE
-	Codiad is a web based programmers editor.
-	It is available through the web interface as a top level subdirectory ie http://host:port/codiad. No authentication.
-	Codiad can be installed as a docker image to edit files in any container volume
-		docker run -e VIRTUAL_HOST=codiad.docker  -v <\\c\host path>:/opt/codiad/workspace -v /opt/codiad/plugins trobz/codiads
-		The /opt/codiad/plugins volume allows mapping of plugin folder from the host system. A collection of most codiad plugins is available as part of the docker-cmfive repository.
+ Codiad is a web based programmers editor.  
+ It is available through the web interface as a top level subdirectory  `http://host:port/codiad`. Use login credentials admin/admin. 
+
+Codiad can be installed as a docker image to edit files in any container volume
+    `docker run -e VIRTUAL_HOST=codiad.docker -v <\\c\host path>:/opt/codiad/workspace -v /opt/codiad/plugins trobz/codiads`
+
+The /opt/codiad/plugins volume allows mapping of plugin folder from the host system. A collection of most codiad plugins is available as part of the docker-cmfive repository.
 
 ###GIT
-	Ungit is available as a docker image reinblau/ungit.
-		If you have access to the file system as a host volume mapping, you can
-			Run ungit with access to that folder
-				docker run -e VIRTUAL_HOST=ungit.docker -v <\\c\host path>:/git  reinblau/ungit
-			When using the ungit UI, you search inside /git for www files.
-		To use ungit you must first gain shell access to the repository and
-			# To allow commit
-				git config user.name "User Name"
-				git config user.email "user@2pisoftware.com" <mailto:"user@2pisoftware.com">
-			#ignore permission diffs
-				git config core.fileMode false
-		Visit http://ungit.docker in a browser <http://ungit.docker>
-			Enter /git/ into the search bar and look for completions.
-			Click enter to load the repository
-			Click plus to save the repository
-			......
-		For a user guide see https://www.youtube.com/watch?v=hkBVAi3oKvo
-	Codiad also provides git workflows
+Git is installed and available from the command line.
+
+Ungit is available as a docker image reinblau/ungit.
+ 
+If you have access to the file system as a host volume mapping, you can run ungit with access to that folder 
+    `docker run -e VIRTUAL_HOST=ungit.docker -v <\\c\host path>:/git reinblau/ungit`
+
+When using the ungit UI, you search inside /git for www files.
+
+To use ungit you must first gain shell access to the repository and to allow commit 
+
+    git config user.name "User Name"
+    git config user.email "user@2pisoftware.com" <mailto:"user@2pisoftware.com"> 
+    git config core.fileMode false 
+
+  Visit http://ungit.docker in a browser <http://ungit.docker>
+
+  Enter /git/ into the search bar and look for completions.
+  
+ - Click enter to load the repository
+ - Click plus to save the repository
+ - ......
+
+For a user guide see https://www.youtube.com/watch?v=hkBVAi3oKvo
+
+Codiad also provides git workflows
 
 ###MySql
-	PhpMyAdmin is available through the web interface as a top level subdirectory ie http://host:port/phpmyadmin. Login credentials admin/admin.
-	Mysql port 3306 is exposed in the images so it is possible to map that port to a host port and use a GUI client to connect.
+PhpMyAdmin is available through the web interface as a top level subdirectory   
+http://host:port/phpmyadmin.   
+Login credentials admin/admin.  
+
+Mysql port 3306 is exposed in the images so it is possible to map that port to a host port and use a GUI client to connect.
 
 ###Tests
-	Tests can be run using the /runtests.sh script inside the image.
-##    Modifying the image
-        It may be appropriate to update the docker build file to make changes and rebuild the base image.
-            The docker build file is available as part of the docker-cmfive repository at
-                <https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/Dockerfile>
-            checkout and change directory to the docker-cmfive repository then run
-                docker build -t 2pisoftware/cmfive .
-        The image is based on phusion/baseimage.
-            Detailed instructions on adding services, startup scripts and other modifications is available at
-                phusion.github.io > Baseimage-docker <http://phusion.github.io/baseimage-docker/> <http://phusion.github.io/baseimage-docker/>>
-                <https://github.com/phusion/baseimage-docker> <https://github.com/phusion/baseimage-docker>>
-##    Docker 101
-###        ARCHITECTURE
+ Tests can be run using the /runtests.sh script inside the image.
+## Modifying the image
+It may be appropriate to update the docker build file to make changes and rebuild the base image.  
+The [docker build file](https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/Dockerfile) is available as part of the docker-cmfive repository.   
+
+Checkout and change directory to the docker-cmfive repository then run  
+`docker build -t 2pisoftware/cmfive . `  
+
+The image is based on phusion/baseimage. Detailed instructions on adding services, startup scripts and other modifications is available at [phusion.github.io](http://phusion.github.io/baseimage-docker) and [blog](https://github.com/phusion/baseimage-docker)
+
+## Docker 101 
+### ARCHITECTURE
             virtual box - used on windows to boot linux
             docker engine daemon managing containers as threads
             image - static filesystem image
@@ -139,15 +164,15 @@ DO NOT EXPOSE any of the docker network interfaces to the internet!!
                 node
                     containers
                         shipyard
-###        INSTALL
+### INSTALL
             Linux
                 <https://docs.docker.com/engine/installation/> <https://docs.docker.com/engine/installation/>>
                 apt-get install docker.io docker-engine
             Windows/Mac
                 There are binary images for windows and mac that include the whole toolbox of - docker machine, docker compose, docker swarm and kitematic GUI.
-                You can login to the virtual box machine using ssh to localhost with user  docker pw tcuser
+                You can login to the virtual box machine using ssh to localhost with user docker pw tcuser
                 <https://docs.docker.com/engine/installation/windows/> <https://docs.docker.com/engine/installation/windows/>>
-###        RUN
+### RUN
             kitematic
                 Fire up kitematic, click new to create a new container then search for hello-world-nginx and click create.
                 Best place to access CLI docker because (at least on windows) key environment is configured for you.
@@ -166,8 +191,8 @@ DO NOT EXPOSE any of the docker network interfaces to the internet!!
                         docker rm $(docker ps -a -q)
             dockerui docker image
                 admin tools for containers and images and networks. more powerful than kitematic
-                docker run     --name docker-compose-ui     -p 5000:5000     -v /Users/User/docks:/opt/docker-compose-projects:rw     -v /var/run/docker.sock:/var/run/docker.sock     francescou/docker-compose-ui:1.0.RC1
-###        CUSTOMISING IMAGES
+                docker run --name docker-compose-ui -p 5000:5000 -v /Users/User/docks:/opt/docker-compose-projects:rw -v /var/run/docker.sock:/var/run/docker.sock francescou/docker-compose-ui:1.0.RC1
+### CUSTOMISING IMAGES
             DockerFile
                 scripted OS install/tweak
                 each step is cached as an overlay filesystem image so rebuild only needs to implement the build from the point of change
@@ -186,14 +211,14 @@ DO NOT EXPOSE any of the docker network interfaces to the internet!!
                 dockercompose-ui image
                     GUI for managing containers based on docker-compose files
                     run compose UI
-###        DEPLOY
+### DEPLOY
             VIRTUAL HOSTING
                 1. A DNS proxy will allow wildcard domain configuration (as compared to tweaking hosts entry). Acrylic DNS proxy work well on windows.
                 DNS entries need to point to the virtual box IP address on windows.
                 2. Install and run nginx-proxy docker image
                     docker run -d -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock:ro jwilder/nginx-proxy
                 3. Restart your container with VIRTUAL_HOST set as an environment veriable and nginx-proxy will pick up the changes and detect the container port then create virtual host entries for nginx.
-                    docker run -e VIRTUAL_HOST=foo.bar.com  ...
+                    docker run -e VIRTUAL_HOST=foo.bar.com ...
                 <https://hub.docker.com/r/jwilder/nginx-proxy/> <https://hub.docker.com/r/jwilder/nginx-proxy/>>
                 Voila
             DOCKER HUB
@@ -208,22 +233,22 @@ DO NOT EXPOSE any of the docker network interfaces to the internet!!
                     monitoring
             SWARM
                 shipyard
-###        CLEANUP
+### CLEANUP
             docker is prone to leave images lying around and eat it's 20G limit
             #containers
                 docker rm $(docker ps -a -q)
             #images
                 docker rmi $(docker images -q --filter "dangling=true")
-            # cron job  - http://blog.yohanliyanage.com/2015/05/docker-clean-up-after-yourself/ <http://blog.yohanliyanage.com/2015/05/docker-clean-up-after-yourself/> <http://blog.yohanliyanage.com/2015/05/docker-clean-up-after-yourself/> <http://blog.yohanliyanage.com/2015/05/docker-clean-up-after-yourself/>
+            # cron job - http://blog.yohanliyanage.com/2015/05/docker-clean-up-after-yourself/ <http://blog.yohanliyanage.com/2015/05/docker-clean-up-after-yourself/> <http://blog.yohanliyanage.com/2015/05/docker-clean-up-after-yourself/> <http://blog.yohanliyanage.com/2015/05/docker-clean-up-after-yourself/>
                 docker rm -v $(docker ps -a -q -f status=exited)
                 docker rmi $(docker images -f "dangling=true" -q)
                 docker run -v /var/run/docker.sock:/var/run/docker.sock -v /var/lib/docker:/var/lib/docker --rm martin/docker-cleanup-volumes
             <https://github.com/meltwater/docker-cleanup> <https://github.com/meltwater/docker-cleanup>> <https://github.com/meltwater/docker-cleanup>>
-###        LINKS
+### LINKS
             <https://github.com/wsargent/docker-cheat-sheet> <https://github.com/wsargent/docker-cheat-sheet>>
             jonathan.bergknoff.com > Journal > Building-good-docker-images <http://jonathan.bergknoff.com/journal/building-good-docker-images> <http://jonathan.bergknoff.com/journal/building-good-docker-images>>
             crosbymichael.com > Dockerfile-best-practices <http://crosbymichael.com/dockerfile-best-practices.html> <http://crosbymichael.com/dockerfile-best-practices.html>>
-##    Notes
+## Notes
         # To allow commit change directory into any repositories to be managed by ungit and execute
         git config user.name "Steve"
         git config user.email "steve@2pisoftware.com" <mailto:"steve@2pisoftware.com">
@@ -236,12 +261,12 @@ DO NOT EXPOSE any of the docker network interfaces to the internet!!
         git clone --depth=1 <remote_repo_URL>
         #TEST find
         #service
-        find .  -name *Service.php
+        find . -name *Service.php
         #objects
-        find .  -name models|grep -v docs|grep cmfive|xargs ls -l|grep -v Service
+        find . -name models|grep -v docs|grep cmfive|xargs ls -l|grep -v Service
         <https://github.com/2pisoftware/cmfive.git>
-		# markdown reference
-		http://daringfireball.net/projects/markdown/basics
+        # markdown reference
+        http://daringfireball.net/projects/markdown/basics
 
 
 [kitematic_installcmfive]: kitematic_installcmfive.png
