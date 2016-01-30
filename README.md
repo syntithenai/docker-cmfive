@@ -58,14 +58,18 @@ There are variety of approaches to interacting with a container.
   - Copy the www directory to the host system using scp or `docker cp src target`.
   - Remap the host volume back into the container.
    - Click change in the kitematic volume settings for the /var/www volume and select the location you copied the original files as the host path.
+   - ![kitematic volumes](kitematic_volumes)
    - Alternatively use 
      `docker run -v <\\c\host path>:/var/www <image>`.
  
 - Using the website 
  - click the link in the kitematic web preview. Cmfive login credentials admin/admin.
+ - - ![cmfive login](cmfive_login)
  - the website also provides user interfaces for
     - file management using codiad. http://cmfive.docker/codiad with login credentials admin/admin.
+    - ![codiad](codiad)
     - git management using ungit. http://ungit.docker/ with no authentication required.
+    - ![ungit](ungit)
     - mysql management using phpmyadmin. http://cmfive.docker/phpmyadmin with login credentials admin/admin.
 - Using docker
  - run a shell inside the container
@@ -269,4 +273,8 @@ The image is based on phusion/baseimage. Detailed instructions on adding service
         http://daringfireball.net/projects/markdown/basics
 
 
-[kitematic_installcmfive]: kitematic_installcmfive.png
+[kitematic_installcmfive]: https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/kitematic_installcmfive.png
+[kitematic_volumes]: https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/kitematic_volumes.png
+[cmfive_login]: https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/doc/cmfive_login.png
+[ungit]: https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/doc/ungit.png
+[codiad]: https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/doc/codiad.png
