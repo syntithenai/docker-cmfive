@@ -13,83 +13,110 @@ This document provides details on working with the image and repository.
 - [Install docker](https://docs.docker.com/engine/installation) and kitematic GUI
 - Use Kitematic to install and run a cmfive container
   - You can click New and search the docker hub then click to download and run the image. 
-  - This is a very large download ~1G!! 
+  - This is a very large download ~400MB!! 
   - ![kitematic install cmfive](kitematic_installcmfive)
 - Alternative install and run the cmfive image
 	- You can execute in the docker powershell
-		- > docker run -e VIRTUAL_HOST=cmfive.docker  -p 2222:22 -p 3306:3306 -P -v /var/www -d --name=cmfive 2pisoftware/cmfive
+			docker run -e VIRTUAL_HOST=cmfive.docker  -p 2222:22 -p 3306:3306 -P -v /var/www -d --name=cmfive 2pisoftware/cmfive
 	- You can use docker compose file in the repository
-		- ` cd /repository `
-		- ` docker-compose up -d `
+			cd /repository
+			docker-compose up -d
 - Another alternative is to build the image using the git repository.
+	- ` docker build -t 2pisoftware/cmfive /respository `
+	- then use docker run as described above
+
 
 ##        Access to the container
 There are variety of approaches to interacting with a container.
+Container persistence.
+Docker has images, containers and volumes.
+An image is a base filesystem for a container.
 
-- using volume mappings to the host  [RECOMMENDED]
-	To keep /var/www file on the host system
-		Copy the www directory to the host system using scp or docker cp.
-		Remap the host volume back into the container.
-			Click change in the kitematic volume settings for the /var/www volume and select the location you copied the original files as the host path.
-			Alternatively use  docker run -v <\\c\host path>:/var/www <image>.
-	 By using volume mappings, any changes to files are not lost if the container is destroyed.
+A container is a running (or stopped) instance.
+Containers reset their filesystem to the base image on restart.
+
+A volume is is a storage folder that will persist between container restarts.
+Volumes are destroyed when their parent container is destroyed.
+Volumes can be created in the build or with docker run.
+Volumes are stored in the master linux filesystem so virtual box for windows/mac.
+It is possible to mount a local filesystem onto a volume using kitematic or docker run -v src:target. In this case the content of the mount point persists even if the container is destroyed and can be remounted to a new container.
+
+It is also possibly to explicitly create volumes usering docker volumes create name. This approach allows the volume to be mounted anywhere in a target image with docker run -v VOLNAME:/destination/in/target.
+- The recommend approach is using volume mappings to the host
+	For example, to work with /var/www directly on your host system 
+		- Copy the www directory to the host system using scp or docker cp.
+		- Remap the host volume back into the container.
+			- Click change in the kitematic volume settings for the /var/www volume and select the location you copied the original files as the host path.
+			- Alternatively use  
+					docker run -v <\\c\host path>:/var/www <image>.
+	 By using volume mappings, any changes to files are not lost if the container is destroyed for a base image update. This can also be achieved using volumes or data containers.
 - using the website
-	click the link in the kitematic web preview. Login credentials admin/admin.
-	the website also provides user interfaces for file management, git management and mysql management.
+	- click the link in the kitematic web preview. Cmfive login credentials admin/admin.
+	- the website also provides user interfaces for
+		- file management using codiad. http://cmfive.docker/codiad with login credentials admin/admin.
+		- git management using ungit. http://ungit.docker/ with no authentication required.
+		- mysql management using phpmyadmin. http://cmfive.docker/phpmyadmin with login credentials admin/admin.
 - using docker
-	run a shell inside the container
-		> docker exec -it <container name> bash
-		nano is available inside the image for editing from bash
-	copy files from/to the container
-		docker cp <container:src> <container:dest>
+	- run a shell inside the container
+			docker exec -it <container name> bash
+	- copy files from/to the container
+			docker cp <container:src> <container:dest>
 - using ssh/scp
-	To enable ssh, use kinetic to map a port or ensure your run command maps port 22 to a host port.
-	To login as root, use the key file docker.ppk from the docker-cmfive repository.
+	- To enable ssh, use kinetic to map a port or ensure your run command maps port 22 to a host port.
+	- To login as root, use the key file docker.ppk from the docker-cmfive repository.
 - using mysql exposed port 3306 with a sql client like HeidiSql
-##        Virtual hosting
-            As you add containers it can be handy to refer to them by domain name.
-            1. A DNS proxy will allow wildcard domain configuration (as compared to tweaking hosts entry). Acrylic DNS proxy works well on windows.
-                DNS entries need to point to the virtual box IP address on windows.
-            2. Install and run nginx-proxy docker image using DOCKER CLI powershell.
-                docker run -d -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock:ro jwilder/nginx-proxy
-            3. Restart your container with VIRTUAL_HOST set as an environment veriable and nginx-proxy will pick up the changes and detect the container port then create virtual host entries for nginx.
-            docker run -e VIRTUAL_HOST=foo.bar.com  ...
-            For more details see https://hub.docker.com/r/jwilder/nginx-proxy <https://hub.docker.com/r/jwilder/nginx-proxy>
+##		Virtual hosting
+As you add containers it can be handy to refer to them by domain name.
+
+- A DNS proxy will allow wildcard domain configuration (as compared to tweaking hosts entry). Acrylic DNS proxy works well on windows.  
+DNS entries need to point to the virtual box IP address on windows.
+- Install and run nginx-proxy docker image using DOCKER CLI powershell.
+		docker run -d -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock:ro jwilder/nginx-proxy
+- Restart your container with VIRTUAL_HOST set as an environment veriable and nginx-proxy will pick up the changes and detect the container port then create virtual host entries for nginx.
+		docker run -e VIRTUAL_HOST=foo.bar.com  ...
+For more details see https://hub.docker.com/r/jwilder/nginx-proxy <https://hub.docker.com/r/jwilder/nginx-proxy>
 ##        Security
-			These images are hopelessly insecure with published default passwords for important services and a published key for root login.
-			DO NOT EXPOSE any of the docker network interfaces to the internet!!
+These images are hopelessly insecure with published default passwords for important services and a published key for root login.  
+
+DO NOT EXPOSE any of the docker network interfaces to the internet!!
 ##        Developing with the image
-            Filesystem Layout
-				When using volume mapping, you can use any tools you like to edit files in the mapped volume from eclipse to vi.
-                The web root is /var/www which is exported as a volume in the build.
-            Codiad IDE
-                Codiad is a web based programmers editor.
-                It is available through the web interface as a top level subdirectory ie http://host:port/codiad. No authentication.
-                Codiad can be installed as a docker image to edit files in any container volume
-                    docker run -e VIRTUAL_HOST=codiad.docker  -v <\\c\host path>:/opt/codiad/workspace -v /opt/codiad/plugins trobz/codiads
-                    The /opt/codiad/plugins volume allows mapping of plugin folder from the host system. A collection of most codiad plugins is available as part of the docker-cmfive repository.
-            GIT
-                Ungit is available as a docker image reinblau/ungit.
-                    If you have access to the file system as a host volume mapping, you can
-                        Run ungit with access to that folder
-                            docker run -e VIRTUAL_HOST=ungit.docker -v <\\c\host path>:/git  reinblau/ungit
-                    To use ungit you must first gain shell access to the repository and
-                        # To allow commit
-                            git config user.name "User Name"
-                            git config user.email "user@2pisoftware.com" <mailto:"user@2pisoftware.com">
-                        #ignore permission diffs
-                            git config core.fileMode false
-                    Visit http://ungit.docker in a browser <http://ungit.docker>
-                        Enter /git/ into the search bar and look for completions.
-                        Click enter to load the repository
-                        Click plus to save the repository
-                        ......
-                Codiad also provides git workflows
-            MySql
-                PhpMyAdmin is available through the web interface as a top level subdirectory ie http://host:port/phpmyadmin. Login credentials admin/admin.
-                Mysql port 3306 is exposed in the images so it is possible to map that port to a host port and use a GUI client to connect.
-            Tests
-                Tests can be run using the /runtests.sh script inside the image.
+###Filesystem Layout
+	When using volume mapping, you can use any tools you like to edit files in the mapped volume from eclipse to vi, git to sourcetree.
+	The web root is /var/www which is exported as a volume in the build.
+
+###Codiad IDE
+	Codiad is a web based programmers editor.
+	It is available through the web interface as a top level subdirectory ie http://host:port/codiad. No authentication.
+	Codiad can be installed as a docker image to edit files in any container volume
+		docker run -e VIRTUAL_HOST=codiad.docker  -v <\\c\host path>:/opt/codiad/workspace -v /opt/codiad/plugins trobz/codiads
+		The /opt/codiad/plugins volume allows mapping of plugin folder from the host system. A collection of most codiad plugins is available as part of the docker-cmfive repository.
+
+###GIT
+	Ungit is available as a docker image reinblau/ungit.
+		If you have access to the file system as a host volume mapping, you can
+			Run ungit with access to that folder
+				docker run -e VIRTUAL_HOST=ungit.docker -v <\\c\host path>:/git  reinblau/ungit
+			When using the ungit UI, you search inside /git for www files.
+		To use ungit you must first gain shell access to the repository and
+			# To allow commit
+				git config user.name "User Name"
+				git config user.email "user@2pisoftware.com" <mailto:"user@2pisoftware.com">
+			#ignore permission diffs
+				git config core.fileMode false
+		Visit http://ungit.docker in a browser <http://ungit.docker>
+			Enter /git/ into the search bar and look for completions.
+			Click enter to load the repository
+			Click plus to save the repository
+			......
+		For a user guide see https://www.youtube.com/watch?v=hkBVAi3oKvo
+	Codiad also provides git workflows
+
+###MySql
+	PhpMyAdmin is available through the web interface as a top level subdirectory ie http://host:port/phpmyadmin. Login credentials admin/admin.
+	Mysql port 3306 is exposed in the images so it is possible to map that port to a host port and use a GUI client to connect.
+
+###Tests
+	Tests can be run using the /runtests.sh script inside the image.
 ##    Modifying the image
         It may be appropriate to update the docker build file to make changes and rebuild the base image.
             The docker build file is available as part of the docker-cmfive repository at
