@@ -14,7 +14,7 @@ This document provides details on working with the image and repository.
 - Use Kitematic to install and run a cmfive container
   - You can click New and search the docker hub then click to download and run the image. 
   - This is a very large download ~400MB!! 
-  - ![kitematic install cmfive](kitematic_installcm5)
+  - ![kitematic install cmfive](https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/doc/kitematic_install_cmfive.png)
 - Alternative install and run the cmfive image
  - You can execute in the docker powershell
    docker run -e VIRTUAL_HOST=cmfive.docker -p 2222:22 -p 3306:3306 -P -v /var/www -d --name=cmfive 2pisoftware/cmfive
@@ -273,4 +273,7 @@ The image is based on phusion/baseimage. Detailed instructions on adding service
         http://daringfireball.net/projects/markdown/basics
 
 
-[kitematic_installcm5]: "https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/doc/kitematic_install_cmfive.png"
+[kitematic_volumes]: https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/doc/kitematic_volumes.png
+[cmfive_login]: https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/doc/cmfive_login.png
+[ungit]: https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/doc/ungit.png
+[codiad]: https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/doc/codiad.png
