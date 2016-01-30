@@ -273,8 +273,4 @@ The image is based on phusion/baseimage. Detailed instructions on adding service
         http://daringfireball.net/projects/markdown/basics
 
 
-[kitematic_installcm5]:https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/doc/kitematic_install_cmfive.png
-[kitematic_volumes]: https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/doc/kitematic_volumes.png
-[cmfive_login]: https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/doc/cmfive_login.png
-[ungit]: https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/doc/ungit.png
-[codiad]: https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/doc/codiad.png
+[kitematic_installcm5]: "https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/doc/kitematic_install_cmfive.png"
