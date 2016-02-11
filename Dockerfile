@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y --force-yes  nano python-software-prope
 RUN DEBIAN_FRONTEND="noninteractive" apt-get update; apt-get install -y --force-yes php5-cli php5-fpm php5-mysql php5-pgsql php5-sqlite php5-curl php5-gd php5-mcrypt php5-intl php5-imap php5-tidy
 
 # CONFIGURE NGINX
-RUN mkdir -p /var/log/nginx;  echo "daemon off;" >> /etc/nginx/nginx.conf; ln -sf /dev/stdout /var/log/nginx/access.log; ln -sf /dev/stderr /var/log/nginx/error.log
+RUN mkdir -p /var/log/nginx;  echo "daemon off;" >> /etc/nginx/nginx.conf; ln -sf /dev/stdout /var/log/nginx/localhost.com-access.log; ln -sf /dev/stderr /var/log/nginx/localhost.com-error.log
 EXPOSE 80 443
 
 
@@ -65,6 +65,7 @@ ADD ./src/cmfive/config.php /var/www/cmfive/config.php
 # testrunner
 ADD ./src/cmfive/environment.cmfive.docker.csv /var/www/testrunner/environment.cmfive.docker.csv
 ADD ./src/cmfive/runcmfivedockertests.sh /runtests.sh
+ADD ./src/cmfive/installcmfive.sh /installcmfive.sh
 # mysql
 ADD ./src/mysql/my.cnf /etc/mysql/conf.d/my.cnf
 ADD ./src/mysql/mysqld_charset.cnf /etc/mysql/conf.d/mysqld_charset.cnf

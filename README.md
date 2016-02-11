@@ -126,7 +126,7 @@ To use ungit you must first gain shell access to the repository and to allow com
     git config user.email "user@2pisoftware.com" <mailto:"user@2pisoftware.com"> 
     git config core.fileMode false 
 
-  Visit http://ungit.docker in a browser <http://ungit.docker>
+  Visit http://ungit.docker in a browser
 
   Enter /git/ into the search bar and look for completions.
   
