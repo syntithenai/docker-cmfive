@@ -80,6 +80,8 @@ ADD ./src/codiad /var/www/cmfive/codiad
 # WIKI
 RUN git clone https://github.com/2pisoftware/cmfive-wiki.git /var/www/wiki; ln -s /var/www/wiki/wiki /var/www/cmfive/modules/wiki
 
+ENV TERM xterm
+
 # executable service scripts
 RUN chmod +x        /etc/service/phpfpm/run
 RUN chmod +x /etc/service/nginx/run
