@@ -91,7 +91,7 @@ RUN chmod +x /etc/service/mysql/run
 #RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # expose volume after set up
-VOLUME /var/www
+#VOLUME /var/www
 
 # phusion/baseimage init script
 CMD ["/sbin/my_init"]
