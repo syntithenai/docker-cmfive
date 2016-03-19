@@ -92,6 +92,6 @@ RUN chmod +x /etc/service/mysql/run
 
 # expose volume after set up
 #VOLUME /var/www
-
+RUN locale-gen de_DE.UTF-8;  locale-gen fr_FR.UTF-8; locale-gen ja_JP.UTF-8;  locale-gen es_ES.UTF-8; locale-gen ru_RU.UTF-8; locale-gen gd_GP.UTF-8; locale-gen nl_NL.UTF-8; locale-gen zh_CN.UTF-8;
 # phusion/baseimage init script
 CMD ["/sbin/my_init"]

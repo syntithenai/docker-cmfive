@@ -2,3 +2,4 @@ web/
 2picrm/id_rsa.pub
 2picrm/id_rsa
 2picrm/known_hosts
+database/
