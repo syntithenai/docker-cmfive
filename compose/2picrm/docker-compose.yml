@@ -1,0 +1,7 @@
+2picrm:
+  image: 2pisoftware/crm
+# expose web, ssh and mysql
+  environment:
+# tell jwilder/nginx-proxy  our domain name
+   - VIRTUAL_HOST=${VIRTUAL_HOST}
+  restart: always
