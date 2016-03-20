@@ -10,6 +10,8 @@ cmfivecomplete:
     - VIRTUAL_HOST=${VIRTUAL_HOST}  
   restart: always     
 
+=======
+ 
 selenium:
   image: selenium/standalone-chrome-debug
   ports: 

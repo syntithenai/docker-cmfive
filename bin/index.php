@@ -37,8 +37,6 @@ try {
 			}
 			echo "</table>";
 		}
-		
-		
 	}
 } catch (Exception $e) {
 	echo $e->getMessage();

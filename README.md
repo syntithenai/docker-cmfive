@@ -146,7 +146,11 @@ Login credentials admin/admin.
 Mysql port 3306 is exposed in the images so it is possible to map that port to a host port and use a GUI client to connect.
 
 ###Tests
- Tests can be run using the /runtests.sh script inside the image.
+To run tests you must start a WebDriver service like phantomjs or Selenium.
+The default docker compose file starts selenium.
+Once the selenium server is running, tests can be run using the /runtests.sh script inside the image.
+ 
+ 
 ## Modifying the image
 It may be appropriate to update the docker build file to make changes and rebuild the base image.  
 The [docker build file](https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/Dockerfile) is available as part of the docker-cmfive repository.   
@@ -247,6 +251,10 @@ The image is based on phusion/baseimage. Detailed instructions on adding service
                 docker rm -v $(docker ps -a -q -f status=exited)
                 docker rmi $(docker images -f "dangling=true" -q)
                 docker run -v /var/run/docker.sock:/var/run/docker.sock -v /var/lib/docker:/var/lib/docker --rm martin/docker-cleanup-volumes
+                
+                docker rm -v $(docker ps -a -q -f status=exited)
+                docker rmi $(docker images -f "dangling=true" -q)
+                docker volume rm $(docker volume ls| awk '{ print $2; }')
             <https://github.com/meltwater/docker-cleanup> <https://github.com/meltwater/docker-cleanup>> <https://github.com/meltwater/docker-cleanup>>
 ### LINKS
             <https://github.com/wsargent/docker-cheat-sheet> <https://github.com/wsargent/docker-cheat-sheet>>
