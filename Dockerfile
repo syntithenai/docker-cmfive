@@ -12,7 +12,7 @@ EXPOSE 80 443
 
 
 # CMFIVE INSTALL 
-RUN git clone --depth=10  -b 0-8-0-BRANCH https://github.com/2pisoftware/cmfive.git /var/www/cmfive
+RUN git clone  -b 0-8-0-BRANCH https://github.com/2pisoftware/cmfive.git /var/www/cmfive
 RUN mkdir -p /var/www/cmfive/storage; mkdir -p /var/www/cmfive/storage/logs; mkdir -p /var/www/cmfive/storage/backups; mkdir -p /var/www/cmfive/storage/session; cd /var/www/cmfive/system; php composer.phar update; chown -R www-data.www-data /var/www/cmfive; chmod -R 755 /var/www/cmfive
 
 # TEST RUNNER INSTALL
