@@ -1,2 +1,2 @@
 DIR=`dirname $0`
-php -f $DIR/DockerManager.php $@
+php -f $DIR/index.php $@

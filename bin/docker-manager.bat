@@ -1,2 +1,2 @@
 @echo off
-php -f %~dp0\DockerManager.php %*
+php -f %~dp0\index.php %*
