@@ -3,3 +3,5 @@ web/
 2picrm/id_rsa
 2picrm/known_hosts
 database/
+bin/WILDCARD_DOMAIN
+nginx-proxy/nginx/

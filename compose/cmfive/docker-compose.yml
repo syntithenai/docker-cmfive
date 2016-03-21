@@ -8,7 +8,7 @@ cmfivecomplete:
     - /var/www
     - /var/lib/mysql
   environment:
-    - VIRTUAL_HOST=${VIRTUAL_HOST}  
+    - VIRTUAL_HOST=${VIRTUAL_HOST}
   restart: always     
 
 testrunner:

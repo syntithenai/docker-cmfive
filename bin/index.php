@@ -1,17 +1,22 @@
 <?php 
 include "DockerManager.php";
-
 try {
+	
 	// handle CLI arguments
 	if (php_sapi_name() == 'cli') {
 		$d=new DockerManager();
+		if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+			$d->windows=true;
+		}
 		$d->run($argv);
 	} else {
 		$d=new DockerManager();
+		if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+			$d->windows=true;
+		}
 		if (array_key_exists('action',$_POST) && $_POST['action']=="up")  {
 			//if ($_POST['']) 
 		} else {
-			$d=new DockerManager();
 			echo "<b>";
 			$d->showDiskSpace();
 			echo "</b>";
@@ -39,5 +44,6 @@ try {
 		}
 	}
 } catch (Exception $e) {
+	echo "EEK:";
 	echo $e->getMessage();
 }	

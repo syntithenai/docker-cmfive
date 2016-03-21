@@ -1,8 +1,15 @@
 <?php 
 //alias dm=/home/ubuntu/projects/docks/docker-cmfive/bin/docker-manager.sh
 
+// FOR WINDOWS TO AVOID SSL ERRORS
+//git config --system http.sslverify false
+
 
 class DockerManager {
+	
+	
+	public $windows = false;  // are we running on ms windows
+	
 	/**
 	 * Generate random pronounceable words
 	 *
@@ -68,22 +75,56 @@ class DockerManager {
 		return $word;
 	}
 
+	function ensureWebProxy() {
+		//echo "ENSURE: PROXY";
+		$output=shell_exec('docker ps');
+		$found=false;
+		//echo $output;
+		if (strpos($output,'nginxproxy_nginxproxy')==false) {
+			$cmd='docker-compose -f ../nginx-proxy/docker-compose.yml up -d';
+			//echo $cmd;
+			echo shell_exec($cmd);
+			$found=true;
+		}
+		if (strpos($output,'nginxgen')==false) {
+			exec('docker rm nginxgen');
+			sleep(3);
+			$cmd='docker run -d --name nginxgen --volumes-from nginxproxy_nginxproxy_1  -t jwilder/docker-gen:0.3.4 -notify-sighup nginx -watch --only-published /etc/docker-gen/templates/nginx.tmpl /etc/nginx/conf.d/default.conf';
+			//echo $cmd;
+			shell_exec($cmd);
+			$found=true;
+		}
+		if ($found) echo "Started web proxy\n";
+	}
 
 	function ensureContainerIsRunning($composerFile,$name,$hostname) {
+		$this->ensureWebProxy();
 		// ENSURE CONTAINER IS RUNNING
 		$nameFlag='';
 		if (!empty($name)) {
 			$nameFlag=' -p '.$name;
 		}
 		$hostConfig='';
+		$composerFileContents='';
+		$newComposerFileContents='';
 		if (!empty($hostname)) {
-			$hostConfig='export VIRTUAL_HOST='.$hostname.'; ';
+			if ($this->windows) {
+				// UGH manual templateing to avoid environment variables in windows
+				$composerFileContents=file_get_contents($composerFile);
+				$newComposerFileContents=str_replace('${VIRTUAL_HOST}',trim($hostname),$composerFileContents);
+				//echo "NewCONTNTE:".$newComposerFileContents;
+			} else {
+				$hostConfig='export VIRTUAL_HOST='.$hostname.'; ';
+			}
 		}
 		$cmd=$hostConfig.'docker-compose -f '.$composerFile.$nameFlag.' up -d';
 		//echo $cmd;
 		$output=[];
 		// capture error output too
+		file_put_contents($composerFile,$newComposerFileContents);
 		$output=shell_exec($cmd.' 2>&1');
+		file_put_contents($composerFile,$composerFileContents);
+		//echo $output;
 		$containerName='';
 		$description='';
 		$lines=explode("\n",$output);
@@ -91,7 +132,7 @@ class DockerManager {
 		foreach ($lines as $line) {
 			$parts=explode(' ',$line);
 			//print_r($parts);
-			if (trim($parts[0])=="Creating" || trim($parts[0])=="Recreating") {
+			if (trim($parts[0])=="Creating" || trim($parts[0])=="Recreating"|| trim($parts[0])=="Starting") {
 				if (strpos($parts[1],'cmfivecomplete')!==false) {
 					$description=$parts[0].' container';
 					$containerNames['cmfive']=trim($parts[1]);
@@ -129,9 +170,26 @@ class DockerManager {
 		//if ()
 		//echo "|".$output."|";
 		// GENERATE NGINX CONFIG AND RELOAD
-		exec('docker-gen -notify="/etc/init.d/nginx reload" '.dirname(__FILE__).'/nginx.tmpl /etc/nginx/sites-enabled/default');
+		//exec('docker-gen -notify="/etc/init.d/nginx reload" '.dirname(__FILE__).'/nginx.tmpl /etc/nginx/sites-enabled/default');
 		//	echo "\n";
 		return $containerNames;
+	}
+	
+	function selfUpdate() {
+		$gitBin='/usr/bin/git';
+		$cmd=$gitBin.' -C '.dirname(__FILE__).'  pull';
+		if ($this->windows) {
+			 
+			$cmd=dirname(__FILE__).'/git.bat  -C '.dirname(__FILE__)."  pull";
+		}
+		
+		//echo $cmd;
+		//echo 
+		shell_exec($cmd);
+	}
+	
+	function build($repo) {
+		
 	}
 						
 	function gitUpdates($containerName,$gitUpdates) {
@@ -177,40 +235,175 @@ class DockerManager {
 		}
 	}
 	
+	
+	function getWildCardBaseDomain() {
+		if (file_exists(dirname(__FILE__)."/WILDCARD_DOMAIN"))  {
+			//return trim(file_get_contents(dirname(__FILE__)."/WILDCARD_DOMAIN"));
+			return "docker	";
+		} else {
+			return "docker.code.2pisoftware.com";
+		}
+	}
+	
 	function downContainer($composerFile,$name) {
-		$hostname=$name; //.'.docker.code.2pisoftware.com';
+		$hostname=$name; 
 		$nameFlag=' -p '.$name;
 		$hostConfig='';
 		if (!empty($hostname)) {
-			$hostConfig='export VIRTUAL_HOST='.$hostname.'; ';
+			if ($this->windows) {
+				$hostConfig='';
+			} else {
+				 $hostConfig='export VIRTUAL_HOST='.$hostname.'; ';
+			}
 		}
+		
 		$cmd=$hostConfig.'docker-compose -f '.$composerFile.$nameFlag.' down --rmi local -v';
 		// capture error output too
 		$output=shell_exec($cmd.' 2>&1');
 		echo $output;
 	}
 	
-	function runClean() {
-		echo exec('docker rm -v $(docker ps -a -q -f status=exited)');
-		echo exec('docker rmi $(docker images -f "dangling=true" -q)');
-		echo exec("docker volume rm $(docker volume ls| awk '{ print $2; }') ");
+	function killAllContainers() {
+		$output=[];
+		// get a list of running containers
+		exec('docker ps ',$output);
+		$a=0;  // skip header row
+		if (count($output)>1)  {
+			foreach ($output as $line) {
+				if ($a>0) {
+					$parts=explode(' ',$line);
+					$id=$parts[0];
+					$name=$parts[count($parts)-1];
+					$cmd='docker kill '.$id;
+					$ioutput=[];
+					exec($cmd,$ioutput);
+					echo "Killed ".$name."\n";
+				}
+				$a++;
+			}
+		} else {
+			echo "No running containers to kill";
+		}
 	}
-						
+	
+	function runClean() {
+		$this->removeStoppedContainers();
+		$this->removeDanglingImages();
+		$this->removeUnusedVolumes();
+	}
+	
+	function removeStoppedContainers() {
+		//echo exec('docker rm -v $(docker ps -a -q -f status=exited)');
+		// get a list of running containers
+		$output=[];
+		exec('docker ps -a -q -f status=exited',$output);
+		$a=0;  // skip header row
+		if (count($output)>1)  {
+			foreach ($output as $line) {
+				if ($a>0) {
+					$parts=explode(' ',$line);
+					$id=$parts[0];
+					$name=$parts[count($parts)-1];
+					$cmd='docker rm -v  '.$id;
+					$ioutput=[];
+					exec($cmd,$ioutput);
+					echo "Removed ".$name."\n";
+				}
+				$a++;
+			}
+		} else {
+			echo "No stopped containers to kill";
+		}
+	}
+	
+	function removeDanglingImages() {
+		//echo exec('docker rmi $(docker images -f "dangling=true" -q)');
+		$output=[];
+		exec('docker images -f "dangling=true" -q',$output);
+		$a=0;  // skip header row
+		if (count($output)>1)  {
+			foreach ($output as $line) {
+				if ($a>0) {
+					$parts=explode(' ',$line);
+					$id=$parts[0];
+					$name=$parts[count($parts)-1];
+					$cmd='docker rmi '.$id;
+					$ioutput=[];
+					exec($cmd,$ioutput);
+					echo "Removed images ".$name."\n";
+				}
+				$a++;
+			}
+		} else {
+			echo "No dangling images to kill";
+		}
+	}
+	
+	function removeUnusedVolumes() {
+		$output=[];
+		$awk="awk  '{ print $2; }'";
+		if ($this->windows)  {
+			$awk=dirname(__FILE__).'\awk.exe -F: "{echo $2}"';
+		}
+		//echo exec("docker volume rm $(docker volume ls| awk '{ print $2; }') ");
+		$cmd="docker volume ls| ".$awk;
+		exec($cmd,$output);
+		$a=0;  // skip header row
+		if (count($output)>1)  {
+			foreach ($output as $line) {
+				if ($a>0) {
+					$parts=explode(' ',$line);
+					$id=$parts[0];
+					$name=$parts[count($parts)-1];
+					$cmd='docker volume rm '.$id;
+					$ioutput=[];
+					exec($cmd,$ioutput);
+					echo "Removed volumes ".$name."\n";
+				}
+				$a++;
+			}
+		} else {
+			echo "No unused volumes to kill";
+		}
+	}
+	
+	
+	
+	// DISK SPACE
 	function showDiskSpace() {
-		// DISK SPACE
-		$cmd="df -h |grep \"/dev/xvda1\"|awk  '{ print $5; }'";
-		echo "DISK SPACE:"; //.$cmd ;
-		echo exec($cmd);
-		echo "\n";
+		if ($this->windows) {
+			echo "\n";
+			$cmd="wmic logicaldisk get size,freespace,caption";
+			echo "DISK USAGE:"; //.$cmd ;
+			$output=[];
+			exec($cmd,$output);
+			$diskSpace='';
+			foreach ($output as $line) {
+				$parts=explode(' ',$line);
+				if ($parts[0]=='C:') {
+					$diskSpace=round(100-($parts[7]/$parts[10])*100,2);
+				}
+			}
+			echo $diskSpace;
+			echo "%\n";
+		} else {
+			$cmd="df -h |grep \"/dev/xvda1\"|awk  '{ print $5; }'";
+			echo "DISK USAGE:"; //.$cmd ;
+			echo exec($cmd);
+			echo "\n";
+		}
 	}
 	
 	function listRunningContainers() {
-		echo exec('docker ps');
+		echo shell_exec('docker ps');
 		//echo file_get_contents('/tmp/docker-manager/activecontainers');
+		echo "\n";
 	}
 
 	function run($argv) {						
 		$this->showDiskSpace();
+		$this->selfUpdate();
+		//die();
 		if (count($argv)>1) {
 			switch ($argv[1]) {  
 				case 'up':
@@ -235,14 +428,15 @@ class DockerManager {
 					if (array_key_exists(4,$argv)) {
 						$hostname=$argv[4];
 					} else {
-						$hostname=$name.'.docker.code.2pisoftware.com';
+						$hostname=$name.'.'.$this->getWildCardBaseDomain();
 					}
 					if (array_key_exists(5,$argv)) {
 						$commitId=$argv[5];
 					}
 					// start instance
+					
 					$containerNames=$this->ensureContainerIsRunning($composerFile,$name,$hostname);
-					//echo "\n";
+			
 					// git updates ??
 					$this->gitUpdates($containerNames['cmfive'],$gitUpdates);
 					
@@ -275,9 +469,11 @@ class DockerManager {
 					break;
 				case 'killall':
 					if ($argv[2]=='reallytruly')  {
-						echo exec('docker kill $(docker ps -q)');
+						$this->killAllContainers();
+					} else {
+						echo "Failed confirmation check - killall reallytruly";
 					}
-					$this->runClean();
+					//$this->runClean();
 					$this->showDiskSpace();
 					
 					break;
@@ -301,7 +497,7 @@ class DockerManager {
 						}
 					}
 					$name='fred'; //$this->random_pronounceable_word(8);
-					$hostname=$name.'.docker.code.2pisoftware.com';
+					$hostname=$name.'.'.$this->getWildCardBaseDomain();
 					$gitUpdates=$argv[3];
 					//echo 'C:'.$commitId;
 					if (empty($gitUpdates)) throw new Exception('You must provide a commit identifier (branch or sha)');
