@@ -160,7 +160,7 @@ class DockerManager {
 		}
 		//print_r([$parts]); //explode(' ',$output[0]));
 		//echo $description."\n";
-		echo $output."\n";
+		//echo $output."\n";
 		echo "CMFIVE CONTAINER:  ".$containerNames['cmfive']."\n";
 		echo "TESTRUNNER CONTAINER:  ".$containerNames['testrunner']."\n";
 		echo "SELENIUM CONTAINER:  ".$containerNames['selenium']."\n";
@@ -504,7 +504,7 @@ class DockerManager {
 					// start instance
 					//echo "start test run".$hostname;
 					$containerNames=$this->ensureContainerIsRunning($composerFile,$name,$hostname);
-					print_r($containerNames);
+					//print_r($containerNames);
 					echo "\n";
 					// git updates ??
 					//echo "git updates ".$gitUpdates;
