@@ -13,6 +13,8 @@ cmfivecomplete:
 
 testrunner:
   image: 2pisoftware/cmfive
+  volumes_from:
+    - cmfivecomplete
   links:
     - selenium
     - cmfivecomplete
