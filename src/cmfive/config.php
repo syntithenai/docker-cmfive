@@ -7,7 +7,7 @@ Config::set('main.company_url', 'http://2pisoftware.com');
 
 //=============== Timezone ==================================
 
-date_default_timezone_set('Australia/Sydney');
+Config::set('system.timezone','Australia/Sydney');
 
 //========== Database Configuration ==========================
 
@@ -39,7 +39,7 @@ Config::set("system.allow_from_ip", '');
 
 // or bypass authentication for the following modules
 Config::set("system.allow_module", array(
-    // "rest", // uncomment this to switch on REST access to the database objects. Tread with CAUTION!
+     "rest", // uncomment this to switch on REST access to the database objects. Tread with CAUTION!
 ));
 
 Config::set('system.allow_action', array(
@@ -61,6 +61,5 @@ Config::set('system.rest_api_key', "abcdefghijklmnopqrstuv");
 Config::set('system.rest_exclude', array(
     "User",
     "Contact",
+    "WikiPage"
 ));
-
-Config::set('testing.base','fred');

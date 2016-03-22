@@ -46,4 +46,5 @@ try {
 } catch (Exception $e) {
 	echo "EEK:";
 	echo $e->getMessage();
+	echo "\n";
 }	

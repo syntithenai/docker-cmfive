@@ -63,7 +63,7 @@ ADD ./src/phpMyAdmin/ /var/www/cmfive/phpMyAdmin
 # cmfive
 ADD ./src/cmfive/config.php /var/www/cmfive/config.php
 # testrunner
-#ADD ./src/cmfive/environment.cmfive.docker.csv /var/www/testrunner/environment.cmfive.docker.csv
+ADD ./src/cmfive/environment.cmfive.docker.csv /environment.cmfive.docker.csv
 ADD ./src/cmfive/runcmfivedockertests.sh /runtests.sh
 ADD ./src/cmfive/installcmfive.sh /installcmfive.sh
 # mysql

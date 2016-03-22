@@ -5,22 +5,22 @@ cmfivecomplete:
     - "22"
     - "3306"
   volumes:
-    - /var/www
-    - /var/lib/mysql
+    - ./../../web:/var/www
   environment:
     - VIRTUAL_HOST=${VIRTUAL_HOST}
   restart: always     
 
 testrunner:
   image: 2pisoftware/cmfive
-  volumes_from:
-    - cmfivecomplete
+  volumes:
+    - ./../../web:/var/www
   links:
     - selenium
     - cmfivecomplete
-
+  restart: always 
+  
 selenium:
-  image: selenium/standalone-chrome-debug
+  image: selenium/standalone-firefox-debug
   ports: 
     - "4444"
     - "5900"
@@ -28,4 +28,4 @@ selenium:
     - "/dev/shm:/dev/shm"
   links:
     - cmfivecomplete
-
+  restart: always 
