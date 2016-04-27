@@ -3,20 +3,12 @@ MAINTAINER Steve Ryan <steve@2pisoftware.com>
 # BASE PACKAGES INSTALL
 RUN add-apt-repository ppa:nginx/stable
 RUN add-apt-repository -y ppa:ondrej/php5
-RUN apt-get update && apt-get install -y --force-yes  nano python-software-properties php5-cli git nginx php5-mysql curl php5-curl phantomjs git
+RUN apt-get update && apt-get install -y --force-yes  nano python-software-properties php5-cli git nginx php5-mysql curl php5-curl git
 RUN DEBIAN_FRONTEND="noninteractive" apt-get update; apt-get install -y --force-yes php5-cli php5-fpm php5-mysql php5-pgsql php5-sqlite php5-curl php5-gd php5-mcrypt php5-intl php5-imap php5-tidy
 
 # CONFIGURE NGINX
 RUN mkdir -p /var/log/nginx;  echo "daemon off;" >> /etc/nginx/nginx.conf; ln -sf /dev/stdout /var/log/nginx/localhost.com-access.log; ln -sf /dev/stderr /var/log/nginx/localhost.com-error.log
 EXPOSE 80 443
-
-
-# CMFIVE INSTALL 
-RUN git clone  -b 0-8-0-BRANCH https://github.com/2pisoftware/cmfive.git /var/www/cmfive
-RUN mkdir -p /var/www/cmfive/storage; mkdir -p /var/www/cmfive/storage/logs; mkdir -p /var/www/cmfive/storage/backups; mkdir -p /var/www/cmfive/storage/session; cd /var/www/cmfive/system; php composer.phar update; chown -R www-data.www-data /var/www/cmfive; chmod -R 755 /var/www/cmfive
-
-# TEST RUNNER INSTALL
-RUN git clone --depth=10 https://github.com/2pisoftware/testrunner.git /var/www/testrunner; chown -R www-data.www-data /var/www/testrunner; chmod -R 755 /var/www/testrunner; cd /var/www/testrunner; php composer.phar update;
 
 # SSH ACCESS
 RUN rm -f /etc/service/sshd/down
@@ -59,26 +51,13 @@ ADD ./src/nginx/run /etc/service/nginx/run
 ADD ./src/nginx/default /etc/nginx/sites-enabled/default
 # php
 ADD ./src/nginx/phpfpm.sh /etc/service/phpfpm/run
-ADD ./src/phpMyAdmin/ /var/www/cmfive/phpMyAdmin
-# cmfive
-ADD ./src/cmfive/config.php /var/www/cmfive/config.php
-# testrunner
-#ADD ./src/cmfive/environment.cmfive.docker.csv /environment.cmfive.docker.csv
-ADD ./src/cmfive/runcmfivedockertests.sh /runtests.sh
-ADD ./src/cmfive/installcmfive.sh /installcmfive.sh
 # mysql
 ADD ./src/mysql/my.cnf /etc/mysql/conf.d/my.cnf
 ADD ./src/mysql/mysqld_charset.cnf /etc/mysql/conf.d/mysqld_charset.cnf
 ADD ./src/mysql/import_sql.sh /import_sql.sh
 # todo generate this
-ADD ./src/cmfive/install.sql /install.sql
+ADD ./src/install.sql /install.sql
 ADD ./src/mysql/run.sh /etc/service/mysql/run
-# PHPMYADMIN
-ADD ./src/phpMyAdmin /var/www/cmfive/phpmyadmin
-#CODIAD
-ADD ./src/codiad /var/www/cmfive/codiad
-# WIKI
-RUN git clone https://github.com/2pisoftware/cmfive-wiki.git /var/www/wiki; ln -s /var/www/wiki/wiki /var/www/cmfive/modules/wiki
 
 ENV TERM xterm
 
@@ -90,8 +69,5 @@ RUN chmod +x /etc/service/mysql/run
 #DISABLE apt cleanup
 #RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# expose volume after set up
-#VOLUME /var/www
-RUN locale-gen de_DE.UTF-8;  locale-gen fr_FR.UTF-8; locale-gen ja_JP.UTF-8;  locale-gen es_ES.UTF-8; locale-gen ru_RU.UTF-8; locale-gen gd_GP.UTF-8; locale-gen nl_NL.UTF-8; locale-gen zh_CN.UTF-8;
 # phusion/baseimage init script
 CMD ["/sbin/my_init"]

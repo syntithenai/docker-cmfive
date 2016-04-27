@@ -24,12 +24,14 @@ class DockerManager {
 	}
 	
 	function buildImage($image) {
-		//return;
 		$buildPath='';
 		$tag='';
 		if ($image=='cmfive') {
 			$buildPath=dirname(__FILE__).'/../';
 			$tag='2pisoftware/cmfive';
+		} else if (file_exists(dirname(__FILE__).'/../compose/'.$image."/Dockerfile"))  {
+			$buildPath=dirname(__FILE__).'/../compose/'.$image."/";
+			$tag='2pisoftware/'.$image;
 		} else if ($image=='2picrm') {
 			throw new Exception('2picrm build not imeplemented');
 		} else {
@@ -126,6 +128,7 @@ class DockerManager {
 					
 					// git updates ??
 					$this->gitUpdates($containerNames['cmfivecomplete'],$gitUpdates);
+					$this->gitUpdates($containerNames['testrunner'],$gitUpdates);
 					$this->showDiskSpace();
 		
 					break;
@@ -203,6 +206,8 @@ class DockerManager {
 					$this->showSeleniumPorts($containerNames['selenium'],$hostname);
 					
 					$this->gitUpdates($containerNames['cmfivecomplete'],$gitUpdates);
+					$this->gitUpdates($containerNames['testrunner'],$gitUpdates);
+					
 					echo "\nGIT update testrunner:\n";
 					$cmd='docker exec '.$containerNames['testrunner'].' /usr/bin/git -C /var/www/testrunner  pull';
 					echo exec($cmd);
@@ -330,6 +335,7 @@ class DockerManager {
 	}
 	
 	function selfUpdate() {
+		$path=realpath(dirname(__FILE__).'../');
 		$gitBin='/usr/bin/git';
 		$cmd=$gitBin.' -C '.$path.' pull';
 		if ($this->windows) {
@@ -518,11 +524,25 @@ class DockerManager {
 			echo "DISK USAGE:"; //.$cmd ;
 			$output=[];
 			exec($cmd,$output);
+			//print_r($output);
 			$diskSpace='';
 			foreach ($output as $line) {
 				$parts=explode(' ',$line);
 				if ($parts[0]=='C:') {
-					$diskSpace=round(100-($parts[7]/$parts[10])*100,2);
+					$used=0;
+					$size=0;
+					foreach (array_slice($parts,1) as $part) {
+						if ($part>0) {
+							if ($used>0) {
+								$size=$part;
+							} else {
+								$used=$part;
+							}
+						}
+					}
+					$diskSpace=round(100-($used/$size)*100,2);
+					//print_r([$used,$size,$diskSpace]);
+					
 				}
 			}
 			echo $diskSpace;

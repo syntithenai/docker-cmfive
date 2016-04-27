@@ -5,7 +5,9 @@ cmfivecomplete:
     - "22"
     - "3306"
   volumes:
-    - ./../../web:/var/www
+#    - ../../database:/var/lib/mysql
+    - ../../web:/var/www
+    - ../../src/cmfive/environment.cmfive.docker.csv:/environment.cmfive.docker.csv
   environment:
     - VIRTUAL_HOST=${VIRTUAL_HOST}
   restart: always     
@@ -13,7 +15,8 @@ cmfivecomplete:
 testrunner:
   image: 2pisoftware/cmfive
   volumes:
-    - ./../../web:/var/www
+    - /var/www
+    - ../../src/cmfive/environment.testrunner.docker.csv:/environment.cmfive.docker.csv
   links:
     - selenium
     - cmfivecomplete

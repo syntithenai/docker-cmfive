@@ -1,0 +1,11 @@
+webserver:
+  image: 2pisoftware/webserver
+  ports:
+    - "80"
+    - "22"
+    - "3306"
+  volumes:
+    - ../../web:/var/www
+  environment:
+    - VIRTUAL_HOST=${VIRTUAL_HOST}
+  restart: always     
