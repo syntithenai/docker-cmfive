@@ -193,7 +193,10 @@ class DockerManager {
 							throw new Exception ('Invalid composer file specified - '.$argv[2]);
 						}
 					}
-					$gitUpdates=$argv[3];
+					$gitUpdates='';
+					if (array_key_exists(3,$argv)) {
+						$gitUpdates=$argv[3];
+					}
 					//if (empty($gitUpdates)) throw new Exception('You must provide a commit identifier (branch or sha)');
 					
 					// assign name and domain for this test run
