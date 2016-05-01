@@ -1,32 +1,63 @@
 #Cmfive Developer workflow with Docker
 ## Introduction
 As an organisation there are benefits to the development team working with standardised docker images. 
+In particular, a stable environment for running tests optimises developer time.
 To that end we have have created a cmfive developer toolkit using docker.
 
-- We have a [docker.io image](https://hub.docker.com/r/2pisoftware/cmfive/) that enables a very easy standardised cmfive installation. 
-- We have a [git repository](https://github.com/syntithenai/docker-cmfive) that provides files to build the cmfive docker image. 
-- The image also includes browser based tools for file management, git and mysql.
+- We have a [docker.io image](https://hub.docker.com/r/2pisoftware/cmfive/) that enables a very easy standardised cmfive installation. The image includes browser based tools for file management, git and mysql.
+- We have a [git repository](https://github.com/2pisoftware/docker-cmfive) that provides files to build the cmfive docker image. The repository also contains a collection of composer configurations and a docker-manager script to simplify running collections of images.
 
 This document provides details on working with the image and repository.
+
 ## Getting started
 
+- [Install docker](https://docs.docker.com/engine/installation) and Kitematic GUI
+- Using Kitematic you can click `New` and search the docker hub for cmfive then click to download and run the image. 
+  - This is a very large download ~400MB!! 
+  - ![kitematic install cmfive](https://raw.githubusercontent.com/2pisoftware/docker-cmfive/master/doc/kitematic_install_cmfive.png)
+
+## Docker container suite
+
+The repository includes composer suites to start a collection of images.
+The cmfive composer suite starts containers for web, db, testrunner and selenium. 
+
+- Checkout https://github.com/2pisoftware/docker-cmfive 
+- Use bin/docker-manager.sh 
+`XX/bin/docker-manager.sh up cmfive mysite
+XX/bin/docker-manager.sh down cmfive mysite
+` 
+There are composer suites for a general webserver and a webdav server included in the repository.
+`XX/bin/docker-manager.sh up webdav mydav
+
+The manager suite also provides commands for 
+
+- build
+- killall
+- clean
+- test  
+
+In the cmfive image, the web, db and testrunner all use the cmfive base image so there is little overhead in having multiple hosts. The hosts are split to avoid a problem with circular dependancies in docker compose v1 format. v2 format offers easier network configuration but is not compatible with the proxy approach to virtual hosting described below.
+
+All the compose suites assume a web folder in the root of the repository to use for mapping local file system access into the images. When a cmfive image is running, it's /var/www folder is mapped to XXX/repository/web/ on the local machine. 
+
+## Other ways to get started
 - [Install docker](https://docs.docker.com/engine/installation) and kitematic GUI
 - Use Kitematic to install and run a cmfive container
-  - You can click New and search the docker hub then click to download and run the image. 
-  - This is a very large download ~400MB!! 
-  - ![kitematic install cmfive](https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/doc/kitematic_install_cmfive.png)
+  
 - Alternative install and run the cmfive image
  - You can execute in the docker powershell
    docker run -e VIRTUAL_HOST=cmfive.docker -p 2222:22 -p 3306:3306 -P -v /var/www -d --name=cmfive 2pisoftware/cmfive
  - You can use docker compose file in the repository
    cd /repository
    docker-compose up -d
+ - You can use docker manager `dm up cmfive mysite mysite.org.au`
 - Another alternative is to build the image using the git repository.
- - ` docker build -t 2pisoftware/cmfive /respository `
+ - ` docker build -t 2pisoftware/cmfive /repository `
  - then use docker run as described above
 
 
-##Container persistence.
+## Container persistence.
+
 Docker has images, containers and volumes.
 An image is a base filesystem for a container.
 
@@ -61,6 +92,8 @@ There are variety of approaches to interacting with a container.
    - ![kitematic volumes](https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/doc/kitematic_volumes.png)
    - Alternatively use 
      `docker run -v <\\c\host path>:/var/www <image>`.
+   - Alternatively modify the docker-compose.yml file to add the volume and host mapping.
+     
  
 - Using the website 
  - click the link in the kitematic web preview. Cmfive login credentials admin/admin.
@@ -97,11 +130,14 @@ These images are hopelessly insecure with published default passwords for import
 
 **DO NOT EXPOSE any of the docker network interfaces to the internet!!**
 ## Developing with the image
-###Filesystem Layout
+
+### Filesystem Layout
+
  When using volume mapping, you can use any tools you like to edit files in the mapped volume from eclipse to vi, git to sourcetree.
  The web root is /var/www which is exported as a volume in the build.
 
-###Codiad IDE
+### Codiad IDE
+
  Codiad is a web based programmers editor.  
  It is available through the web interface as a top level subdirectory  `http://host:port/codiad`. Use login credentials admin/admin. 
 
@@ -110,7 +146,8 @@ Codiad can be installed as a docker image to edit files in any container volume
 
 The /opt/codiad/plugins volume allows mapping of plugin folder from the host system. A collection of most codiad plugins is available as part of the docker-cmfive repository.
 
-###GIT
+### GIT
+
 Git is installed and available from the command line.
 
 Ungit is available as a docker image reinblau/ungit.
@@ -138,17 +175,15 @@ For a user guide see https://www.youtube.com/watch?v=hkBVAi3oKvo
 
 Codiad also provides git workflows
 
-###MySql
+### MySql
 PhpMyAdmin is available through the web interface as a top level subdirectory   
 http://host:port/phpmyadmin.   
 Login credentials admin/admin.  
 
 Mysql port 3306 is exposed in the images so it is possible to map that port to a host port and use a GUI client to connect.
 
-###Tests
-To run tests you must start a WebDriver service like phantomjs or Selenium.
-The default docker compose file starts selenium.
-Once the selenium server is running, tests can be run using the /runtests.sh script inside the image.
+### Tests
+Tests can be run using the /runtests.sh script inside the image.
  
  
 ## Modifying the image

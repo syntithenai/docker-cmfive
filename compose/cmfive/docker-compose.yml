@@ -5,21 +5,32 @@ cmfivecomplete:
     - "22"
     - "3306"
   volumes:
-#    - ../../database:/var/lib/mysql
     - ../../web:/var/www
     - ../../src/cmfive/environment.cmfive.docker.csv:/environment.cmfive.docker.csv
+#    - ../../database:/var/lib/mysql
+  links:
+    - cmfivemysqlserver
   environment:
     - VIRTUAL_HOST=${VIRTUAL_HOST}
-  restart: always     
+  restart: always    
+  
+cmfivemysqlserver: 
+  image: 2pisoftware/cmfive
+  ports:
+    - "3306"
+#  volumes:
+#    - /var/lib/mysql
+  restart: always    
 
 testrunner:
   image: 2pisoftware/cmfive
   volumes:
-    - /var/www
+    - ../../web:/var/www
     - ../../src/cmfive/environment.testrunner.docker.csv:/environment.cmfive.docker.csv
   links:
     - selenium
     - cmfivecomplete
+    - cmfivemysqlserver
   restart: always 
   
 selenium:
