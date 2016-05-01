@@ -56,6 +56,23 @@ All the compose suites assume a web folder in the root of the repository to use 
  - then use docker run as described above
 
 
+##	Virtual hosting
+As you add containers it can be handy to refer to them by domain name.
+
+1. A DNS proxy will allow wildcard domain configuration (as compared to tweaking hosts entry). Acrylic DNS proxy works well on windows. 
+DNS entries need to point to the virtual box IP address on windows.
+2. Install and run nginx-proxy docker image using DOCKER CLI powershell. 
+  `docker run -d -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock:ro jwilder/nginx-proxy`
+3. Restart your container with VIRTUAL_HOST set as an environment veriable and nginx-proxy will pick up the changes and detect the container port then create virtual host entries for nginx.
+  `docker run -e VIRTUAL_HOST=foo.bar.com ...`
+For more details see https://hub.docker.com/r/jwilder/nginx-proxy <https://hub.docker.com/r/jwilder/nginx-proxy>
+
+## Security
+These images are hopelessly insecure with published default passwords for important services and a published key for root login. 
+
+**DO NOT EXPOSE any of the docker network interfaces to the internet!!**
+
+
 ## Container persistence.
 
 Docker has images, containers and volumes.
@@ -113,22 +130,6 @@ There are variety of approaches to interacting with a container.
  - To enable ssh, use kinetic to map a port or ensure your run command maps port 22 to a host port.
  - To login as root, use the key file docker.ppk from the docker-cmfive repository.
 - using mysql exposed port 3306 with a sql client like HeidiSql
-
-##	Virtual hosting
-As you add containers it can be handy to refer to them by domain name.
-
-1. A DNS proxy will allow wildcard domain configuration (as compared to tweaking hosts entry). Acrylic DNS proxy works well on windows. 
-DNS entries need to point to the virtual box IP address on windows.
-2. Install and run nginx-proxy docker image using DOCKER CLI powershell. 
-  `docker run -d -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock:ro jwilder/nginx-proxy`
-3. Restart your container with VIRTUAL_HOST set as an environment veriable and nginx-proxy will pick up the changes and detect the container port then create virtual host entries for nginx.
-  `docker run -e VIRTUAL_HOST=foo.bar.com ...`
-For more details see https://hub.docker.com/r/jwilder/nginx-proxy <https://hub.docker.com/r/jwilder/nginx-proxy>
-
-## Security
-These images are hopelessly insecure with published default passwords for important services and a published key for root login. 
-
-**DO NOT EXPOSE any of the docker network interfaces to the internet!!**
 ## Developing with the image
 
 ### Filesystem Layout
