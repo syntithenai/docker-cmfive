@@ -74,7 +74,15 @@ class DockerManager {
 					
 	
 	
-	function run($argv) {						
+	function run($argv) {		
+		if (strlen(trim(getenv('DOCKERMANAGER_WEB_ROOT')))==0) {
+			echo "\nYou must set an environment variable for your web root\n";
+			echo "For windows powershell ->\n \$env:DOCKERMANAGER_WEB_ROOT=\"/path/to/your/web/folder\" \nor relative to compose/project ie \n\$env:DOCKERMANAGER_WEB_ROOT=\"../../web\" \n";
+						
+			echo "For bash ->\n export DOCKERMANAGER_WEB_ROOT=/path/to/your/web/folder\n\n";
+			die();
+		}
+						
 		if (count($argv)>1) {
 			switch ($argv[1]) {  
 				case 'proxy' :

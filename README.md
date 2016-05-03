@@ -32,13 +32,20 @@ There are composer suites for a general webserver and a webdav server included i
 The manager suite also provides commands for 
 
 - build
-- killall
+- killall [reallytruly] - reallytruly will stop and remove all running containers, otherwise just cleanup
 - clean
 - test  
 
 In the cmfive image, the web, db and testrunner all use the cmfive base image so there is little overhead in having multiple hosts. The hosts are split to avoid a problem with circular dependancies in docker compose v1 format. v2 format offers easier network configuration but is not compatible with the proxy approach to virtual hosting described below.
 
-All the compose suites assume a web folder in the root of the repository to use for mapping local file system access into the images. When a cmfive image is running, it's /var/www folder is mapped to XXX/repository/web/ on the local machine. 
+All the compose suites assume that an environment variable DOCKERMANAGER_WEB_ROOT is set to a path on your local filesystem where you store websites which is volume mapped as the www or data folder for the images. 
+
+Before using the cmfive or 2picrm images, the mapped web folder needs to be primed with a cmfive and testrunner installations.
+If you run the image without composer as described in the QuickStart section above, you can copy everything you need from the container to your local file system using 
+`docker cp cmfivecomplete_1:/var/www C:\Users\User\Desktop\`
+OR ssh access as described below.
+
+
 
 ## Other ways to get started
 - [Install docker](https://docs.docker.com/engine/installation) and kitematic GUI
@@ -70,7 +77,7 @@ For more details see https://hub.docker.com/r/jwilder/nginx-proxy <https://hub.d
 ## Security
 These images are hopelessly insecure with published default passwords for important services and a published key for root login. 
 
-**DO NOT EXPOSE any of the docker network interfaces to the internet!!**
+**DO NOT EXPOSE any of the docker network interfaces to the internet without securing the image!!**
 
 
 ## Container persistence.
@@ -110,7 +117,7 @@ There are variety of approaches to interacting with a container.
    - Alternatively use 
      `docker run -v <\\c\host path>:/var/www <image>`.
    - Alternatively modify the docker-compose.yml file to add the volume and host mapping.
-     
+   - The docker container suite requires that an environment variable DOCKERMANAGER_WEB_ROOT is set so that the host mapping is managed by composer.
  
 - Using the website 
  - click the link in the kitematic web preview. Cmfive login credentials admin/admin.
@@ -132,10 +139,7 @@ There are variety of approaches to interacting with a container.
 - using mysql exposed port 3306 with a sql client like HeidiSql
 ## Developing with the image
 
-### Filesystem Layout
 
- When using volume mapping, you can use any tools you like to edit files in the mapped volume from eclipse to vi, git to sourcetree.
- The web root is /var/www which is exported as a volume in the build.
 
 ### Codiad IDE
 

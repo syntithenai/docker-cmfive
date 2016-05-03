@@ -3,10 +3,10 @@ apachewebdav:
   ports:
     - "80"
   volumes: 
-    - ./webdav:/srv/webdav
+    - ${DOCKERMANAGER_WEB_ROOT}:/srv/webdav
     - ./cors.conf:/etc/apache2/conf-enabled/cors.conf
     - ./headers.load:/etc/apache2/mods-enabled/headers.load
   environment:
-    - VIRTUAL_HOST=webdav.docker
+    - VIRTUAL_HOST=${VIRTUAL_HOST}
     - APACHE_PORT=80
   restart: always     

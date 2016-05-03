@@ -1,5 +1,7 @@
 server {
 	listen 80 default_server;
+    sendfile off; # docker bug
+    
 	server_name _; # This is just an invalid value which will never trigger on a real hostname.
 	error_log /proc/self/fd/2;
 	access_log /proc/self/fd/1;
@@ -49,7 +51,6 @@ server {
 	proxy_buffering off;
 	error_log /proc/self/fd/2;
 	access_log /proc/self/fd/1;
-
 	location / {
 		proxy_pass http://{{ trim $host }};
 		proxy_set_header Host $http_host;
