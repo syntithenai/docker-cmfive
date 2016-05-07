@@ -6,7 +6,7 @@ testIncludePath,/var/www/cmfive
 testSharedSupportPath,/var/www/cmfive/system/tests/_support
 cmFivePath,/var/www/cmfive
 driver,mysql
-hostname,cmfivemysqlserver
+hostname,localhost
 username,admin
 password,admin
 database,cmfive

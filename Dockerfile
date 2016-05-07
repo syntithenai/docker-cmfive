@@ -46,7 +46,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && apt-get update && \
    # rm /etc/mysql/conf.d/mysqld_safe_syslog.cnf && \
    # if [ ! -f /usr/share/mysql/my-default.cnf ] ; then cp /etc/mysql/my.cnf /usr/share/mysql/my-default.cnf; fi && \
 #RUN   mysql_install_db > /dev/null 2>&1 
-#RUN touch /var/lib/mysql/.EMPTY_DB
+RUN touch /var/lib/mysql/.EMPTY_DB
 
 # Add MySQL scripts
 ENV MYSQL_USER=admin MYSQL_PASS=admin ON_CREATE_DB=cmfive STARTUP_SQL=/install.sql
@@ -78,14 +78,13 @@ ADD ./src/phpMyAdmin/ /var/www/cmfive/phpMyAdmin
 # cmfive
 ADD ./src/cmfive/config.php /var/www/cmfive/config.php
 # testrunner
-#ADD ./src/cmfive/environment.cmfive.docker.csv /environment.cmfive.docker.csv
+ADD ./src/cmfive/environment.cmfive.docker.csv /environment.cmfive.docker.csv
 ADD ./src/cmfive/runcmfivedockertests.sh /runtests.sh
 ADD ./src/cmfive/installcmfive.sh /installcmfive.sh
 # mysql
 ADD ./src/mysql/my.cnf /etc/mysql/conf.d/my.cnf
 ADD ./src/mysql/mysqld_charset.cnf /etc/mysql/conf.d/mysqld_charset.cnf
 ADD ./src/mysql/import_sql.sh /import_sql.sh
-# todo generate this
 ADD ./src/cmfive/install.sql /install.sql
 ADD ./src/mysql/run.sh /etc/service/mysql/run
 # PHPMYADMIN
