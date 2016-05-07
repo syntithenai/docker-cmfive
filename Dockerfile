@@ -45,7 +45,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && apt-get update && \
    # rm -rf /var/lib/apt/lists/* && \
    # rm /etc/mysql/conf.d/mysqld_safe_syslog.cnf && \
    # if [ ! -f /usr/share/mysql/my-default.cnf ] ; then cp /etc/mysql/my.cnf /usr/share/mysql/my-default.cnf; fi && \
-#RUN   mysql_install_db > /dev/null 2>&1 
+RUN   mysql_install_db > /dev/null 2>&1 
 RUN touch /var/lib/mysql/.EMPTY_DB
 
 # Add MySQL scripts
