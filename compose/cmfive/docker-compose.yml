@@ -8,13 +8,13 @@ cmfivecomplete:
     - ${DOCKERMANAGER_WEB_ROOT}:/var/www
     - ../../src/cmfive/environment.cmfive.docker.csv:/environment.cmfive.docker.csv
 #    - ../../database:/var/lib/mysql
-    - ./src/nginx/keys/cacert.pem:/etc/nginx/certs/default.crt
-    - ./src/nginx/keys/privkey.pem:/etc/nginx/certs/default.key
+#    - ./src/nginx/keys/cacert.pem:/etc/nginx/certs/default.crt
+#    - ./src/nginx/keys/privkey.pem:/etc/nginx/certs/default.key
   links:
     - cmfivemysqlserver
   environment:
     - VIRTUAL_HOST=${VIRTUAL_HOST}
-    - CERT_NAME=default
+#    - CERT_NAME=default
   restart: always    
   
 cmfivemysqlserver: 

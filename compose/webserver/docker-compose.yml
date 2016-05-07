@@ -12,4 +12,5 @@ webserver:
   environment:
     - VIRTUAL_HOST=${VIRTUAL_HOST}
     - CERT_NAME=default
+    - HTTPS_METHOD=noredirect
   restart: always     
