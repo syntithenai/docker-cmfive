@@ -4,6 +4,7 @@ MAINTAINER Steve Ryan <steve@2pisoftware.com>
   
 # INTEGRATE PHUSION BASE IMAGE STEPS
 ADD ./src/baseimage/ /bd_build/
+RUN chmod +rx -R /bd_build/
 
 RUN /bd_build/prepare.sh && \
  	/bd_build/system_services.sh && \
@@ -23,19 +24,19 @@ EXPOSE 80 443
 
 
 # CMFIVE INSTALL 
-RUN git clone  -b 0-8-0-BRANCH https://github.com/2pisoftware/cmfive.git /var/www/cmfive
-RUN mkdir -p /var/www/cmfive/storage; mkdir -p /var/www/cmfive/storage/logs; mkdir -p /var/www/cmfive/storage/backups; mkdir -p /var/www/cmfive/storage/session; cd /var/www/cmfive/system; php composer.phar update; chown -R www-data.www-data /var/www/cmfive; chmod -R 755 /var/www/cmfive
+#RUN git clone  -b 0-8-0-BRANCH https://github.com/2pisoftware/cmfive.git /var/www/cmfive
+#RUN mkdir -p /var/www/cmfive/storage; mkdir -p /var/www/cmfive/storage/logs; mkdir -p /var/www/cmfive/storage/backups; mkdir -p /var/www/cmfive/storage/session; cd /var/www/cmfive/system; php composer.phar update; chown -R www-data.www-data /var/www/cmfive; chmod -R 755 /var/www/cmfive
 
 RUN apt-get update && apt-get install  -y --force-yes   php-mbstring php7.0-mbstring php-gettext
 
 # TEST RUNNER INSTALL
-RUN git clone --depth=10 https://github.com/2pisoftware/testrunner.git /var/www/testrunner; chown -R www-data.www-data /var/www/testrunner; chmod -R 755 /var/www/testrunner; cd /var/www/testrunner; php composer.phar update;
+#RUN git clone --depth=10 https://github.com/2pisoftware/testrunner.git /var/www/testrunner; chown -R www-data.www-data /var/www/testrunner; chmod -R 755 /var/www/testrunner; cd /var/www/testrunner; php composer.phar update;
 
 # SSH ACCESS
 #RUN rm -f /etc/service/sshd/down
-#RUN /etc/my_init.d/00_regen_ssh_host_keys.sh
-#RUN /usr/sbin/enable_insecure_key
-#EXPOSE 22
+RUN /etc/my_init.d/00_regen_ssh_host_keys.sh
+RUN /usr/sbin/enable_insecure_key
+EXPOSE 22
 
 # MYSQL INSTALL AND SETUP
 RUN export DEBIAN_FRONTEND=noninteractive && apt-get update && \
@@ -109,7 +110,7 @@ RUN chmod +x /etc/service/mysql/run
 RUN locale-gen de_DE.UTF-8;  locale-gen fr_FR.UTF-8; locale-gen ja_JP.UTF-8;  locale-gen es_ES.UTF-8; locale-gen ru_RU.UTF-8; locale-gen gd_GP.UTF-8; locale-gen nl_NL.UTF-8; locale-gen zh_CN.UTF-8;
 
 ENV VIRTUAL_HOST cmfive.docker
-#VOLUME /var/www
+VOLUME /var/www
 
 # phusion/baseimage init script
 CMD ["/sbin/my_init"]
