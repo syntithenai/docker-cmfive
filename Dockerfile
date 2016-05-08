@@ -45,19 +45,28 @@ RUN export DEBIAN_FRONTEND=noninteractive && apt-get update && \
    # rm -rf /var/lib/apt/lists/* && \
    # rm /etc/mysql/conf.d/mysqld_safe_syslog.cnf && \
    # if [ ! -f /usr/share/mysql/my-default.cnf ] ; then cp /etc/mysql/my.cnf /usr/share/mysql/my-default.cnf; fi && \
-#RUN   mysql_install_db > /dev/null 2>&1 
+#RUN   mysqld --initialize
+# > /dev/null 2>&1 
 RUN touch /var/lib/mysql/.EMPTY_DB
+
+# LOCALES
+RUN locale-gen de_DE.UTF-8;  locale-gen fr_FR.UTF-8; locale-gen ja_JP.UTF-8;  locale-gen es_ES.UTF-8; locale-gen ru_RU.UTF-8; locale-gen gd_GB.UTF-8; locale-gen nl_NL.UTF-8; locale-gen zh_CN.UTF-8;
+
 
 # Add MySQL scripts
 ENV MYSQL_USER=admin MYSQL_PASS=admin ON_CREATE_DB=cmfive STARTUP_SQL=/install.sql
 
 # Add VOLUMEs to allow backup of config and databases
-VOLUME ["/etc/mysql","/etc/nginx", "/var/lib/mysql", "/var/run/mysqld","/var/www"]
-#RUN mkdir /etc/service/mysql
+#VOLUME ["/etc/mysql","/etc/nginx", "/var/lib/mysql", "/var/run/mysqld","/var/www"]
+RUN mkdir /etc/service/mysql
 EXPOSE 3306
 
-
 # PHP CONFIG
+RUN sed -i 's/^listen\s*=.*$/listen = 127.0.0.1:9000/' /etc/php/7.0/fpm/pool.d/www.conf && \
+    sed -i 's/^\;error_log\s*=\s*syslog\s*$/error_log = \/var\/log\/php\/cgi.log/' /etc/php/7.0/fpm/php.ini && \
+    sed -i 's/^\;error_log\s*=\s*syslog\s*$/error_log = \/var\/log\/php\/cli.log/' /etc/php/7.0/cli/php.ini && \
+    sed -i 's/^key_buffer\s*=/key_buffer_size =/' /etc/mysql/my.cnf
+
 # Ensure UTF-8
 RUN locale-gen en_US.UTF-8
 ENV LANG       en_US.UTF-8
@@ -67,7 +76,7 @@ ENV LC_ALL     en_US.UTF-8
 #RUN sed -i "s/;date.timezone =.*/date.timezone = UTC/" /etc/php5/cli/php.ini
 #RUN sed -i -e "s/;daemonize\s*=\s*yes/daemonize = no/g" /etc/php5/fpm/php-fpm.conf
 #RUN sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" /etc/php5/fpm/php.ini
-#RUN mkdir           /etc/service/phpfpm
+RUN mkdir           /etc/service/phpfpm
 
 # nginx
 ADD ./src/nginx/run /etc/service/nginx/run
@@ -106,10 +115,11 @@ RUN chmod +x /etc/service/mysql/run
 
 # expose volume after set up
 
-RUN locale-gen de_DE.UTF-8;  locale-gen fr_FR.UTF-8; locale-gen ja_JP.UTF-8;  locale-gen es_ES.UTF-8; locale-gen ru_RU.UTF-8; locale-gen gd_GP.UTF-8; locale-gen nl_NL.UTF-8; locale-gen zh_CN.UTF-8;
 
 ENV VIRTUAL_HOST cmfive.docker
 VOLUME /var/www
+
+RUN mkdir /run/php
 
 # phusion/baseimage init script
 CMD ["/sbin/my_init"]

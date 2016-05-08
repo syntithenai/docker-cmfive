@@ -6,6 +6,7 @@ set -e
 VOLUME_HOME="/var/lib/mysql"
 CONF_FILE="/etc/mysql/conf.d/my.cnf"
 LOG="/var/log/mysql/error.log"
+PID=''
 
 # Set permission of config file
 chmod 644 ${CONF_FILE}
@@ -13,7 +14,9 @@ chmod 644 /etc/mysql/conf.d/mysqld_charset.cnf
 
 StartMySQL ()
 {
-    /usr/bin/mysqld_safe ${EXTRA_OPTS} > /dev/null 2>&1 &
+	/usr/bin/mysqld_safe ${EXTRA_OPTS} > /dev/null 2>&1 &
+    PID=`jobs -p`
+
     # Time out in 1 minute
     LOOP_LIMIT=60
     for (( i=0 ; ; i++ )); do
@@ -26,6 +29,7 @@ StartMySQL ()
         sleep 1
         mysql -uroot -e "status" > /dev/null 2>&1 && break
     done
+    echo "${PID}"
 }
 
 CreateMySQLUser()
@@ -75,13 +79,13 @@ ImportSql()
 }
 
 # Main
-if [ ${REPLICATION_MASTER} == "**False**" ]; then
-    unset REPLICATION_MASTER
-fi
+#if [ ${REPLICATION_MASTER} == "**False**" ]; then
+#    unset REPLICATION_MASTER
+#fi
 
-if [ ${REPLICATION_SLAVE} == "**False**" ]; then
-    unset REPLICATION_SLAVE
-fi
+#if [ ${REPLICATION_SLAVE} == "**False**" ]; then
+#    unset REPLICATION_SLAVE
+#fi
 
 # Initialize empty data volume and create MySQL user
 if [[ ! -d $VOLUME_HOME/mysql ]]; then
@@ -132,8 +136,10 @@ fi
 
 
 echo "=> Starting MySQL ..."
-StartMySQL
+STARTOUTPUT=$(StartMySQL)
+PID=$(echo ${STARTOUTPUT}|tail -n 1)
 tail -F $LOG &
+echo "${STARTOUTPUT}"
 
 # Create admin user and pre create database
 if [ -f /var/lib/mysql/.EMPTY_DB ]; then
@@ -152,6 +158,8 @@ if [ -n "${STARTUP_SQL}" ]; then
         touch /sql_imported
     fi
 fi
+trap "kill -SIGQUIT $PID" INT
+wait
 
 # Set MySQL REPLICATION - MASTER
 if [ -n "${REPLICATION_MASTER}" ]; then
@@ -187,4 +195,4 @@ if [ -n "${REPLICATION_SLAVE}" ]; then
     fi
 fi
 
-fg
+#fg
