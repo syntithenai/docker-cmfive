@@ -1,5 +1,4 @@
-dtestPath,/var/www/cmfive/modules::::/var/www/cmfive/system/tests
-testPath,/var/www/cmfive/modules/wiki
+testPath,/var/www/cmfive/modules::::/var/www/cmfive/system/tests
 testSuite,
 testUrl,http://localhost
 testIncludePath,/var/www/cmfive
