@@ -1,11 +1,6 @@
 #Cmfive Developer workflow with Docker
-## Introduction
-As an organisation there are benefits to the development team working with standardised docker images. 
-In particular, a stable environment for running tests optimises developer time.
-To that end we have have created a cmfive developer toolkit using docker.
 
-- We have a [docker.io image](https://hub.docker.com/r/2pisoftware/cmfive/) that enables a very easy standardised cmfive installation. The image includes browser based tools for file management, git and mysql.
-- We have a [git repository](https://github.com/2pisoftware/docker-cmfive) that provides files to build the cmfive docker image. The repository also contains a collection of composer configurations and a docker-manager script to simplify running collections of images.
+This repository contains the DockerFile and resources to build the  [2pisoftware/cmfive docker.io image](https://hub.docker.com/r/2pisoftware/cmfive/)  which contains everything needed to install cmfive and run tests.
 
 This document provides details on working with the image and repository.
 
@@ -15,72 +10,62 @@ This document provides details on working with the image and repository.
 - Using Kitematic you can click `New` and search the docker hub for cmfive then click to download and run the image. 
   - This is a very large download ~400MB!! 
   - ![kitematic install cmfive](https://raw.githubusercontent.com/2pisoftware/docker-cmfive/master/doc/kitematic_install_cmfive.png)
+  - Click the kitematic web preview link to access the CmFive web interface login admin/admin.
 
-## Docker container suite
+## Docker Basics
 
-The repository includes composer suites to start a collection of images.
-The cmfive composer suite starts containers for web, db, testrunner and selenium. 
+One line restart of a cmfive container
 
-- Checkout https://github.com/2pisoftware/docker-cmfive 
-- Use bin/docker-manager.sh 
-`XX/bin/docker-manager.sh up cmfive mysite
-XX/bin/docker-manager.sh down cmfive mysite
-` 
-There are composer suites for a general webserver and a webdav server included in the repository.
-`XX/bin/docker-manager.sh up webdav mydav
+`docker stop cmfive; docker rm cmfive; docker run --name cmfive -d -P 2pisoftware/cmfive; docker exec -it cmfive bash`
 
-The manager suite also provides commands for 
-
-- build
-- killall [reallytruly] - reallytruly will stop and remove all running containers, otherwise just cleanup
-- clean
-- test  
-
-In the cmfive image, the web, db and testrunner all use the cmfive base image so there is little overhead in having multiple hosts. The hosts are split to avoid a problem with circular dependancies in docker compose v1 format. v2 format offers easier network configuration but is not compatible with the proxy approach to virtual hosting described below.
-
-All the compose suites assume that an environment variable DOCKERMANAGER_WEB_ROOT is set to a path on your local filesystem where you store websites which is volume mapped as the www or data folder for the images. 
-
-Before using the cmfive or 2picrm images, the mapped web folder needs to be primed with a cmfive and testrunner installations.
-If you run the image without composer as described in the QuickStart section above, you can copy everything you need from the container to your local file system using 
-`docker cp cmfivecomplete_1:/var/www C:\Users\User\Desktop\`
-OR ssh access as described below.
+- `docker run --name <container> -d -P`  start the container with a name, auto map ports and start as daemon
+- `docker exec -it <container> bash`     start an interactive bash shell inside the container
+- `docker stop <container>`				 stop the container
+- `docker start <container>`			 start a stopped container
+- `docker rm <container>`   			 delete a container (and any changes to the filesystem)
+- `docker help XXX`						
 
 
+### Port Mapping
+Port mapping can be controlled explicitly using -p <hostPort>:<containerPort>  
 
-## Other ways to get started
-- [Install docker](https://docs.docker.com/engine/installation) and kitematic GUI
-- Use Kitematic to install and run a cmfive container
-  
-- Alternative install and run the cmfive image
- - You can execute in the docker powershell
-   docker run -e VIRTUAL_HOST=cmfive.docker -p 2222:22 -p 3306:3306 -P -v /var/www -d --name=cmfive 2pisoftware/cmfive
- - You can use docker compose file in the repository
-   cd /repository
-   docker-compose up -d
- - You can use docker manager `dm up cmfive mysite mysite.org.au`
-- Another alternative is to build the image using the git repository.
- - ` docker build -t 2pisoftware/cmfive /repository `
- - then use docker run as described above
+eg -p 8080:80 to map www to 8080 on host
+
+### Other options
+Other useful flags include
+
+- --restart=no|on-failure|always|unless-stopped 
+- --rm      delete container when stopped
+
+[Docker run reference](https://docs.docker.com/engine/reference/run/)
 
 
-##	Virtual hosting
-As you add containers it can be handy to refer to them by domain name.
+### Cleanup
 
-1. A DNS proxy will allow wildcard domain configuration (as compared to tweaking hosts entry). Acrylic DNS proxy works well on windows. 
-DNS entries need to point to the virtual box IP address on windows.
-2. Install and run nginx-proxy docker image using DOCKER CLI powershell. 
-  `docker run -d -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock:ro jwilder/nginx-proxy`
-3. Restart your container with VIRTUAL_HOST set as an environment veriable and nginx-proxy will pick up the changes and detect the container port then create virtual host entries for nginx.
-  `docker run -e VIRTUAL_HOST=foo.bar.com ...`
-For more details see https://hub.docker.com/r/jwilder/nginx-proxy <https://hub.docker.com/r/jwilder/nginx-proxy>
+The VM is configured with a 20G drive by default. When building images and running many images the drive may fill and cause unpredictable problems. Use the following command to clean old images. 
+`docker rm -v $(docker ps -a -q -f status=exited) ; docker rmi $(docker images -f "dangling=true" -q) ;  docker run -v /var/run/docker.sock:/var/run/docker.sock -v /var/lib/docker:/var/lib/docker --rm martin/docker-cleanup-volumes`
+It may also be necessary to manually remove installed images
+`docker images`
+`docker rmi <imageHash>`
 
-## Security
-These images are hopelessly insecure with published default passwords for important services and a published key for root login. 
+### Volumes
+                
+To work directly with the container filesystem, VOLUMES can be mapped to the client. In this way platform based tools for editing and version management can be used.
 
-**DO NOT EXPOSE any of the docker network interfaces to the internet without securing the image!!**
+`docker run --name <container> -d -P -v <hostPath>:<containerPath>`
 
+On windows, a cygwin style path is required
 
-## Container persistence.
+eg -v //c/projects/www:/var/www
+
+It is also possible to map a volume using kitematic.
+
+The contents of the target container path will be replaced by the content of the host path. The contents of the volume to be mapped should be copied to the host before mapping.
+`docker cp <containerName>:/var/www/ /projects/www`
+
+To avoid problems with symbolic links, Windows users will need to run bash inside the image, zip the target folder and use docker copy and extract to the host.
+
+### Container persistence.
 
 Docker has images, containers and volumes.
 An image is a base filesystem for a container.
@@ -89,57 +74,48 @@ A container is a running (or stopped) instance.
 Containers reset their filesystem to the base image on restart.
 
 A volume is is a storage folder that will persist between container restarts.
-
 - Volumes are destroyed when their parent container is destroyed.
 - Volumes can be defined in the build or with docker run.
 - Volumes are stored in the master linux filesystem so inside virtual box for windows/mac.
-- Volumes can be lost when docker engine restarts.
+- Volumes can be lost when docker engine restarts??
 
-It is possible to mount a volume onto a local filesystem using kitematic or `docker run -v src:target`. In this case the content of the mount point persists no  matter what.
-This approach allows platform based tools access to the filesystem eg sourcetree or eclipse.
+Where host mapping is used as described above, the content of the mount point persists no  matter what.
 
 It is also possibly to explicitly create Data Volumes using   
   `  docker volumes create -name <volume name>  `  
 This approach allows the volume to be mounted anywhere in a target image with  
    `docker run -v <volume name>`  
 
-## Access to the container
-There are variety of approaches to interacting with a container.
+[Docker reference](https://docs.docker.com/engine/userguide/containers/dockervolumes/)
 
-- The recommended approach is using volume mappings to the host.  By using volume mappings, any changes to files are not lost if the container is destroyed for a base image update. This can also be achieved using data volumes.
 
- For example, to work with /var/www directly on your host system 
 
-  - Copy the www directory to the host system using scp or `docker cp src target`.
-  - Remap the host volume back into the container.
-   - Click change in the kitematic volume settings for the /var/www volume and select the location you copied the original files as the host path.
-   - ![kitematic volumes](https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/doc/kitematic_volumes.png)
-   - Alternatively use 
-     `docker run -v <\\c\host path>:/var/www <image>`.
-   - Alternatively modify the docker-compose.yml file to add the volume and host mapping.
-   - The docker container suite requires that an environment variable DOCKERMANAGER_WEB_ROOT is set so that the host mapping is managed by composer.
- 
-- Using the website 
- - click the link in the kitematic web preview. Cmfive login credentials admin/admin.
- - - ![cmfive login](https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/doc/cmfive_login.png)
+## Working with the image
+
+### CmFive Web Interface
+
+
+### Shell Access
+
+You can run any command inside the image `docker exec <containerName> <command>`
+You can run an interactive bash shell using `docker exec -it <containerName> bash`
+
+### SSH
+To enable ssh, port 22 maps to a host port.
+To login as root, use the key file docker.ppk from the docker-cmfive repository.
+
+### mysql
+
+myssql can be exposed on 3306 to a sql client like HeidiSql
+
+### Copying files
+
  - the website also provides user interfaces for
     - file management using codiad. http://cmfive.docker/codiad with login credentials admin/admin.
     - ![codiad](https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/doc/codiad.png)
     - git management using ungit. http://ungit.docker/ with no authentication required.
     - ![ungit](https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/doc/ungit.png)
     - mysql management using phpmyadmin. http://cmfive.docker/phpmyadmin with login credentials admin/admin.
-- Using docker
- - run a shell inside the container
-     `docker exec -it <container name> bash`
- - copy files from/to the container
-   `docker cp <container:src> <container:dest>`
-- using ssh/scp
- - To enable ssh, use kinetic to map a port or ensure your run command maps port 22 to a host port.
- - To login as root, use the key file docker.ppk from the docker-cmfive repository.
-- using mysql exposed port 3306 with a sql client like HeidiSql
-## Developing with the image
-
-
 
 ### Codiad IDE
 
@@ -190,6 +166,55 @@ Mysql port 3306 is exposed in the images so it is possible to map that port to a
 ### Tests
 Tests can be run using the /runtests.sh script inside the image.
  
+
+
+
+
+##	Virtual hosting
+As you add containers it can be handy to refer to them by domain name.
+
+1. A DNS proxy will allow wildcard domain configuration (as compared to tweaking hosts entry). Acrylic DNS proxy works well on windows. 
+DNS entries need to point to the virtual box IP address on windows.
+2. Install and run nginx-proxy docker image using DOCKER CLI powershell. 
+  `docker run -d -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock:ro jwilder/nginx-proxy`
+3. Restart your container with VIRTUAL_HOST set as an environment veriable and nginx-proxy will pick up the changes and detect the container port then create virtual host entries for nginx.
+  `docker run -e VIRTUAL_HOST=foo.bar.com ...`
+For more details see https://hub.docker.com/r/jwilder/nginx-proxy <https://hub.docker.com/r/jwilder/nginx-proxy>
+
+
+
+
+
+
+## Access to the container
+There are variety of approaches to interacting with a container.
+
+- The recommended approach is using volume mappings to the host.  By using volume mappings, any changes to files are not lost if the container is destroyed for a base image update. This can also be achieved using data volumes.
+
+ For example, to work with /var/www directly on your host system 
+
+  - Copy the www directory to the host system using scp or `docker cp src target`.
+  - Remap the host volume back into the container.
+   - Click change in the kitematic volume settings for the /var/www volume and select the location you copied the original files as the host path.
+   - ![kitematic volumes](https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/doc/kitematic_volumes.png)
+   - Alternatively use 
+     `docker run -v <\\c\host path>:/var/www <image>`.
+   - Alternatively modify the docker-compose.yml file to add the volume and host mapping.
+   - The docker container suite requires that an environment variable DOCKERMANAGER_WEB_ROOT is set so that the host mapping is managed by composer.
+ 
+- Using the website 
+ - click the link in the kitematic web preview. Cmfive login credentials admin/admin.
+ - - ![cmfive login](https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/doc/cmfive_login.png)
+- Using docker
+ - run a shell inside the container
+     `docker exec -it <container name> bash`
+ - copy files from/to the container
+   `docker cp <container:src> <container:dest>`
+
+
+## Developing with the image
+
+
  
 ## Modifying the image
 It may be appropriate to update the docker build file to make changes and rebuild the base image.  
@@ -290,6 +315,7 @@ The image is based on phusion/baseimage. Detailed instructions on adding service
             # cron job - http://blog.yohanliyanage.com/2015/05/docker-clean-up-after-yourself/ <http://blog.yohanliyanage.com/2015/05/docker-clean-up-after-yourself/> <http://blog.yohanliyanage.com/2015/05/docker-clean-up-after-yourself/> <http://blog.yohanliyanage.com/2015/05/docker-clean-up-after-yourself/>
                 docker rm -v $(docker ps -a -q -f status=exited)
                 docker rmi $(docker images -f "dangling=true" -q)
+                 docker volume rm $(docker volume ls| awk '{ print $2; }')
                 docker run -v /var/run/docker.sock:/var/run/docker.sock -v /var/lib/docker:/var/lib/docker --rm martin/docker-cleanup-volumes
                 
                 docker rm -v $(docker ps -a -q -f status=exited)
@@ -321,3 +347,55 @@ The image is based on phusion/baseimage. Detailed instructions on adding service
         http://daringfireball.net/projects/markdown/basics
 
 https://help.github.com/articles/dealing-with-line-endings/
+
+
+## Docker container suite
+
+The repository includes composer suites to start a collection of images.
+The cmfive composer suite starts containers for web, db, testrunner and selenium. 
+
+- Checkout https://github.com/2pisoftware/docker-cmfive 
+- Use bin/docker-manager.sh 
+`XX/bin/docker-manager.sh up cmfive mysite
+XX/bin/docker-manager.sh down cmfive mysite
+` 
+There are composer suites for a general webserver and a webdav server included in the repository.
+`XX/bin/docker-manager.sh up webdav mydav
+
+The manager suite also provides commands for 
+
+- build
+- killall [reallytruly] - reallytruly will stop and remove all running containers, otherwise just cleanup
+- clean
+- test  
+
+In the cmfive image, the web, db and testrunner all use the cmfive base image so there is little overhead in having multiple hosts. The hosts are split to avoid a problem with circular dependancies in docker compose v1 format. v2 format offers easier network configuration but is not compatible with the proxy approach to virtual hosting described below.
+
+All the compose suites assume that an environment variable DOCKERMANAGER_WEB_ROOT is set to a path on your local filesystem where you store websites which is volume mapped as the www or data folder for the images. 
+
+Before using the cmfive or 2picrm images, the mapped web folder needs to be primed with a cmfive and testrunner installations.
+If you run the image without composer as described in the QuickStart section above, you can copy everything you need from the container to your local file system using 
+`docker cp cmfivecomplete_1:/var/www C:\Users\User\Desktop\`
+OR ssh access as described below.
+
+## Security
+These images are hopelessly insecure with published default passwords for important services and a published key for root login. 
+
+**DO NOT EXPOSE any of the docker network interfaces to the internet without securing the image!!**
+
+
+## Other ways to get started
+- [Install docker](https://docs.docker.com/engine/installation) and kitematic GUI
+- Use Kitematic to install and run a cmfive container
+  
+- Alternative install and run the cmfive image
+ - You can execute in the docker powershell
+   docker run -e VIRTUAL_HOST=cmfive.docker -p 2222:22 -p 3306:3306 -P -v /var/www -d --name=cmfive 2pisoftware/cmfive
+ - You can use docker compose file in the repository
+   cd /repository
+   docker-compose up -d
+ - You can use docker manager `dm up cmfive mysite mysite.org.au`
+- Another alternative is to build the image using the git repository.
+ - ` docker build -t 2pisoftware/cmfive /repository `
+ - then use docker run as described above
+
