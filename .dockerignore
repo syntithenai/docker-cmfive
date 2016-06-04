@@ -1,4 +1,6 @@
 web
+nginx-proxy
+doc
 database
 compose
 bin

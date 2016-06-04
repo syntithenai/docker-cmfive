@@ -6,3 +6,4 @@ database/
 bin/WILDCARD_DOMAIN
 nginx-proxy/nginx/
 compose/webdav/webdav
+oldweb

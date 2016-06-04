@@ -37,10 +37,10 @@ location / {
         #
         # Tell client that this pre-flight info is valid for 20 days
         #
-        add_header 'Access-Control-Max-Age' 1728000;
-        add_header 'Content-Type' 'text/plain charset=UTF-8';
-        add_header 'Content-Length' 0;
-        return 204;
+#        add_header 'Access-Control-Max-Age' 1728000;
+#        add_header 'Content-Type' 'text/plain charset=UTF-8';
+#        add_header 'Content-Length' 0;
+#        return 204;
      }
      if ($request_method = 'OPTIONS') {
         add_header 'Access-Control-Allow-Origin' '*';
@@ -56,10 +56,10 @@ location / {
         #
         # Tell client that this pre-flight info is valid for 20 days
         #
-        add_header 'Access-Control-Max-Age' 1728000;
-        add_header 'Content-Type' 'text/plain charset=UTF-8';
-        add_header 'Content-Length' 0;
-        return 204;
+#        add_header 'Access-Control-Max-Age' 1728000;
+#        add_header 'Content-Type' 'text/plain charset=UTF-8';
+#        add_header 'Content-Length' 0;
+#        return 204;
      }
      #if ($request_method = 'POST') {
      #   add_header 'Access-Control-Allow-Origin' '*';
@@ -83,6 +83,7 @@ location / {
     # pass the PHP scripts to php5-fpm
     # Note: \.php$ is susceptible to file upload attacks
     # Consider using: "location ~ ^/(index|app|app_dev|config)\.php(/|$) {"
+    
     location ~ .php$ {
       fastcgi_split_path_info ^(.+\.php)(/.+)$;
       try_files $uri =404;

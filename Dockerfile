@@ -1,8 +1,5 @@
 FROM ubuntu:16.04
 MAINTAINER Steve Ryan <steve@2pisoftware.com>
-
-# Add VOLUMEs to allow backup of config and databases
-#VOLUME ["/etc/mysql","/etc/nginx", "/var/lib/mysql", "/var/run/mysqld","/var/www"]
   
 # INTEGRATE PHUSION BASE IMAGE STEPS
 ADD ./src/baseimage/ /bd_build/
@@ -140,47 +137,36 @@ RUN apt-get update -qqy \
 EXPOSE 5900
 
  
-RUN apt-get update && apt-get install  -y --force-yes software-properties-common python-software-properties git php-cli
-RUN apt-get --allow-unauthenticated update && apt-get install -y --force-yes  nano  php-cli git nginx php-mysql curl php-curl git
-RUN DEBIAN_FRONTEND="noninteractive" apt-get update; apt-get install -y --force-yes php-cli php-fpm php-mysql php-pgsql php-curl php-gd php-mcrypt php-intl php-imap php-tidy
-RUN apt-get update && apt-get install  -y --force-yes   php-mbstring php7.0-mbstring php-gettext
+RUN DEBIAN_FRONTEND="noninteractive" ; apt-get  --allow-unauthenticated update && apt-get install  -yq  --force-yes software-properties-common python-software-properties git php-cli  nano  php-cli git nginx php-mysql curl php-curl git php-cli php-fpm php-mysql php-pgsql php-curl php-gd php-mcrypt php-intl php-imap php-tidy  php-mbstring php7.0-mbstring php-gettext  mysql-server-5.7 pwgen && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*; 
 
 # CONFIGURE NGINX
 RUN mkdir -p /var/log/nginx;  echo "daemon off;" >> /etc/nginx/nginx.conf; ln -sf /dev/stdout /var/log/nginx/localhost.com-access.log; ln -sf /dev/stderr /var/log/nginx/localhost.com-error.log
 EXPOSE 80 443
 
-# CMFIVE INSTALL 
-RUN git clone --depth=1 -b master https://github.com/2pisoftware/cmfive.git /var/www/cmfive
-RUN mkdir -p /var/www/cmfive/storage; mkdir -p /var/www/cmfive/storage/logs; mkdir -p /var/www/cmfive/storage/backups; mkdir -p /var/www/cmfive/storage/session; cd /var/www/cmfive/system; php composer.phar update; chown -R www-data.www-data /var/www/cmfive; chmod -R 755 /var/www/cmfive
-
-# TEST RUNNER INSTALL
-RUN git clone --depth=1 https://github.com/2pisoftware/testrunner.git /var/www/testrunner; chown -R www-data.www-data /var/www/testrunner; chmod -R 755 /var/www/testrunner; cd /var/www/testrunner; php composer.phar update;
 
 # SSH ACCESS
-#RUN rm -f /etc/service/sshd/down
-#RUN /etc/my_init.d/00_regen_ssh_host_keys.sh
-#RUN /usr/sbin/enable_insecure_key
-#EXPOSE 22
+RUN rm -f /etc/service/sshd/down
+RUN /etc/my_init.d/00_regen_ssh_host_keys.sh
+RUN /usr/sbin/enable_insecure_key
+EXPOSE 22
 
 # MYSQL INSTALL AND SETUP
-RUN export DEBIAN_FRONTEND=noninteractive && apt-get update && \
-    apt-get -yq install mysql-server-5.7 pwgen 
-    #&& \
+#RUN export DEBIAN_FRONTEND=noninteractive && apt-get update && \
+#    apt-get -yq install mysql-server-5.7 pwgen 
+#    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
    # rm -rf /var/lib/apt/lists/* && \
    # rm /etc/mysql/conf.d/mysqld_safe_syslog.cnf && \
    # if [ ! -f /usr/share/mysql/my-default.cnf ] ; then cp /etc/mysql/my.cnf /usr/share/mysql/my-default.cnf; fi && \
 RUN touch /var/lib/mysql/.EMPTY_DB
+EXPOSE 3306
 
 # LOCALES
 RUN locale-gen de_DE.UTF-8;  locale-gen fr_FR.UTF-8; locale-gen ja_JP.UTF-8;  locale-gen es_ES.UTF-8; locale-gen ru_RU.UTF-8; locale-gen gd_GB.UTF-8; locale-gen nl_NL.UTF-8; locale-gen zh_CN.UTF-8;
 
-
-# Add MySQL scripts
-ENV MYSQL_USER=admin MYSQL_PASS=admin ON_CREATE_DB=cmfive STARTUP_SQL=/install.sql
-
-
-RUN mkdir /etc/service/mysql
-EXPOSE 3306
+# Ensure UTF-8
+RUN locale-gen en_US.UTF-8
+ENV LANG       en_US.UTF-8
+ENV LC_ALL     en_US.UTF-8
 
 # PHP CONFIG
 RUN sed -i 's/^listen\s*=.*$/listen = 127.0.0.1:9000/' /etc/php/7.0/fpm/pool.d/www.conf && \
@@ -188,51 +174,57 @@ RUN sed -i 's/^listen\s*=.*$/listen = 127.0.0.1:9000/' /etc/php/7.0/fpm/pool.d/w
     sed -i 's/^\;error_log\s*=\s*syslog\s*$/error_log = \/var\/log\/php\/cli.log/' /etc/php/7.0/cli/php.ini && \
     sed -i 's/^key_buffer\s*=/key_buffer_size =/' /etc/mysql/my.cnf
 
-# Ensure UTF-8
-RUN locale-gen en_US.UTF-8
-ENV LANG       en_US.UTF-8
-ENV LC_ALL     en_US.UTF-8
+# TEST RUNNER INSTALL
+RUN git clone --depth=1 https://github.com/2pisoftware/testrunner.git /var/www/testrunner;  cd /var/www/testrunner; export HOME=/var/www;  php composer.phar update; 
+ 
+# CMFIVE INSTALL 
+RUN ls /var/ # force no cache from here
+RUN git clone  --depth=10 -b develop https://github.com/2pisoftware/cmfive.git /var/www/cmfive ; mkdir -p /var/www/cmfive/storage; mkdir -p /var/www/cmfive/storage/logs; mkdir -p /var/www/cmfive/storage/backups; mkdir -p /var/www/cmfive/storage/session; cd /var/www/cmfive/system ; export HOME=/var/www; php composer.phar update
+# WIKI
 
-RUN mkdir           /etc/service/phpfpm
+RUN git clone --depth=1 https://github.com/2pisoftware/cmfive-wiki.git /var/www/wiki; ln -s /var/www/wiki/wiki /var/www/cmfive/modules/wiki 
+
+# composer - can't get updatecomposer to work in build but works fine inside image????
+# this happens in /installcmfive.sh at first startup anyways
+COPY ./src/cmfive/updatecomposer.php /var/www/cmfive/updatecomposer.php
+RUN  cd /var/www/cmfive; chmod 755 /var/www/cmfive/system/composer.json; php -f ./updatecomposer.php; cat /var/www/cmfive/system/composer.json; cd /var/www/cmfive/system; php composer.phar update; 
 
 # nginx
 ADD ./src/nginx/run /etc/service/nginx/run
 ADD ./src/nginx/default /etc/nginx/sites-enabled/default
+RUN chmod +x /etc/service/nginx/run
+
 # php
+RUN mkdir /etc/service/phpfpm
 ADD ./src/nginx/phpfpm.sh /etc/service/phpfpm/run
-ADD ./src/phpMyAdmin/ /var/www/cmfive/phpMyAdmin
+RUN chmod +x        /etc/service/phpfpm/run
+
+# mysql
+# Add MySQL scripts
+ENV MYSQL_USER=admin MYSQL_PASS=admin ON_CREATE_DB=cmfive STARTUP_SQL=/install.sql
+RUN mkdir /etc/service/mysql
+ADD ./src/mysql/my.cnf /etc/mysql/conf.d/my.cnf
+ADD ./src/mysql/mysqld_charset.cnf /etc/mysql/conf.d/mysqld_charset.cnf
+ADD ./src/mysql/import_sql.sh /import_sql.sh
+#ADD ./src/cmfive/install.sql /install.sql
+ADD ./src/mysql/run.sh /etc/service/mysql/run
+RUN chmod +x /etc/service/mysql/run
+
 # cmfive
 ADD ./src/cmfive/config.php /var/www/cmfive/config.php
 # testrunner
 ADD ./src/cmfive/environment.cmfive.docker.csv /environment.cmfive.docker.csv
 ADD ./src/cmfive/runcmfivedockertests.sh /runtests.sh
 ADD ./src/cmfive/installcmfive.sh /installcmfive.sh
-# mysql
-ADD ./src/mysql/my.cnf /etc/mysql/conf.d/my.cnf
-ADD ./src/mysql/mysqld_charset.cnf /etc/mysql/conf.d/mysqld_charset.cnf
-ADD ./src/mysql/import_sql.sh /import_sql.sh
-ADD ./src/cmfive/install.sql /install.sql
-ADD ./src/mysql/run.sh /etc/service/mysql/run
+
+
 # PHPMYADMIN
 ADD ./src/phpMyAdmin /var/www/cmfive/phpmyadmin
+RUN chmod 755 /var/www/cmfive/phpmyadmin/config.inc.php; chown www-data.www-data /var/www/cmfive/phpmyadmin/config.inc.php
 #CODIAD
 ADD ./src/codiad /var/www/cmfive/codiad
-# WIKI
-RUN git clone https://github.com/2pisoftware/cmfive-wiki.git /var/www/wiki; ln -s /var/www/wiki/wiki /var/www/cmfive/modules/wiki
-# WEBDAV
-RUN git clone https://github.com/syntithenai/webdav.git /var/www/webdav; ln -s /var/www/webdav /var/www/cmfive/modules/webdav
-
 
 ENV TERM xterm
-
-# executable service scripts
-RUN chmod +x        /etc/service/phpfpm/run
-RUN chmod +x /etc/service/nginx/run
-RUN chmod +x /etc/service/mysql/run
-
-#DISABLE apt cleanup
-#RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
 
 ENV VIRTUAL_HOST cmfive.docker
 
@@ -247,5 +239,9 @@ COPY \
     
 RUN chmod +x /opt/bin/entry_point.sh; mkdir /etc/service/selenium; ln -s /opt/bin/entry_point.sh /etc/service/selenium/run
 
+# persist database and www between container restarts and allow host mapping
+VOLUME [ "/var/lib/mysql","/var/www"]
+
 # phusion/baseimage init script
 CMD ["/sbin/my_init"]
+

@@ -14,9 +14,7 @@ try {
 		if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
 			$d->windows=true;
 		}
-		if (array_key_exists('action',$_POST) && $_POST['action']=="up")  {
-			//if ($_POST['']) 
-		} else {
+		if (array_key_exists('action',$_POST) )  {
 			echo "<b>";
 			$d->showDiskSpace();
 			echo "</b>";

@@ -30,7 +30,8 @@ Config::set('email', array(
     "password"	=> ""
 ));
 
-Config::set("system.checkCSRF", true);
+Config::set("system.checkCSRF", false);
+Config::set("system.csrf.enable", false);
 
 //========= Anonymous Access ================================
 
@@ -40,7 +41,8 @@ Config::set("system.allow_from_ip", '');
 // or bypass authentication for the following modules
 Config::set("system.allow_module", array(
      "rest", // uncomment this to switch on REST access to the database objects. Tread with CAUTION!
-));
+     "webdav"
+)); 
 
 Config::set('system.allow_action', array(
     "auth/login",

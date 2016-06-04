@@ -23,17 +23,18 @@ class DockerManager {
 		echo exec('rm /swapfile');
 	}
 	
-	function buildImage($image) {
+	function buildImage($image,$version='') {
 		$buildPath='';
 		$tag='';
 		if ($image=='cmfive') {
 			$buildPath=dirname(__FILE__).'/../';
 			$tag='2pisoftware/cmfive';
+			if (strlen(trim($version))>0) $tag.=":".$version;
 		} else if (file_exists(dirname(__FILE__).'/../compose/'.$image."/Dockerfile"))  {
 			$buildPath=dirname(__FILE__).'/../compose/'.$image."/";
 			$tag='2pisoftware/'.$image;
 		} else if ($image=='2picrm') {
-			throw new Exception('2picrm build not imeplemented');
+			throw new Exception('2picrm build not implemented');
 		} else {
 			throw new Exception ('No valid build specified');
 		}
