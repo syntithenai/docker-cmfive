@@ -1,0 +1,16 @@
+webserver:
+  image: 2pisoftware/webserver
+  ports:
+    - "80"
+    - "443"
+    - "22"
+    - "3306"
+  volumes:
+    - ${DOCKERMANAGER_WEB_ROOT}:/var/www    
+    - ./src/nginx/keys/cacert.pem:/etc/nginx/certs/default.crt
+    - ./src/nginx/keys/privkey.pem:/etc/nginx/certs/default.key
+  environment:
+    - VIRTUAL_HOST=${VIRTUAL_HOST}
+    - CERT_NAME=default
+    - HTTPS_METHOD=noredirect
+  restart: always     

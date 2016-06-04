@@ -1,7 +1,7 @@
 server {
 	listen 80;
 
-	root /opt/codeserver/www;
+	root /opt/docker-cmfive/webhooks/www;
 	#root /stuff;
         index index.html index.htm index.php;
 

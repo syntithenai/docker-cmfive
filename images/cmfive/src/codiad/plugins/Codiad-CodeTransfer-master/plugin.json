@@ -1,0 +1,13 @@
+[{
+    "author": "Andr3as",
+    "version": "1.2.2",
+    "name": "CodeTransfer",
+    "url": "https://github.com/Andr3as/Codiad-CodeTransfer.git",
+    "rightbar": [
+        {
+            "action": "codiad.CodeTransfer.showSwitchDialog();",
+            "icon": "icon-switch",
+            "title": "CodeTransfer"
+        }
+    ]
+}]

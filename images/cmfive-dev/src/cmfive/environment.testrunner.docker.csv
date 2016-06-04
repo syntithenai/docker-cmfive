@@ -1,0 +1,13 @@
+testPath,/var/www/cmfive/system/tests
+ddtestPath,/var/www/cmfive/modules::::/var/www/cmfive/system/tests
+dtestPath,/var/www/cmfive/modules/wiki
+testSuite,
+testUrl,http://cmfivecomplete
+testIncludePath,/var/www/cmfive
+testSharedSupportPath,/var/www/cmfive/system/tests/_support
+cmFivePath,/var/www/cmfive
+driver,mysql
+hostname,cmfivemysqlserver
+username,admin
+password,admin
+database,cmfive

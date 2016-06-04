@@ -1,0 +1,4 @@
+cmfivecomplete:
+  image: 2pisoftware/cmfive
+  environment:
+    - VIRTUAL_HOST=${VIRTUAL_HOST}  

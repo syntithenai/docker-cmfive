@@ -1,0 +1,22 @@
+cmfivecomplete:
+  image: 2pisoftware/crm
+  ports:
+    - "80"
+    - "22"
+    - "3306"
+  volumes:
+    - "/var/www"
+  environment:
+    - VIRTUAL_HOST=${VIRTUAL_HOST}  
+  restart: always     
+
+=======
+ 
+selenium:
+  image: selenium/standalone-chrome-debug
+  ports: 
+    - "4444"
+    - "5900"
+  volumes:
+    - "/dev/shm:/dev/shm"
+
