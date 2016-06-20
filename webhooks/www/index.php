@@ -27,7 +27,7 @@ class WebHookHandler {
 		sleep(2);
 		//file_put_contents($this->jobsFolder.$a.".txt",'test	'.$repo.'	'.$gitId.'	'.$user."\n");
 		if (!is_dir($this->jobsFolder)) mkdir($this->jobsFolder,  0777, true);
-		file_put_contents($this->jobsFolder.$a.".txt",$command.'	'.$content."\n");
+		file_put_contents($this->jobsFolder.$a.".txt",$command.' '.$content."\n");
 	}
 	
 	function run() {
@@ -46,7 +46,7 @@ class WebHookHandler {
 		
 		// TAG GITHUB
 		if (array_key_exists('X-Github-Event',$h) && $h['X-Github-Event']==='create' && $b->ref_type=="tag") {
-			$content=$b->repository->html_url.".git ".$b->ref.' '.$b->after;
+			$content=$b->repository->html_url.".git ".$b->ref;
 			$this->writeJob('tag',$content);
 		// PUSH GITHUB
 		} else if (array_key_exists('X-Github-Event',$h) && $h['X-Github-Event']==='push') {
@@ -63,7 +63,7 @@ class WebHookHandler {
 			if (count($branchParts)==3)  {
 				$branch=$branchParts[2];
 			}
-			$content=$user.' '.$b->repository->html_url.".git "." ".$branch.' '.$gitId;
+			$content=$b->repository->html_url.".git "." ".$branch.' '.$gitId.' '.$user;
 			$this->writeJob('push',$content);
 		// BITBUCKET
 		} else if (array_key_exists('X-Event-Key',$h) &&  $h['X-Event-Key']==='repo:push') {
@@ -102,7 +102,7 @@ class WebHookHandler {
 					} 
 					
 					// git clone https://steve_ryan@bitbucket.org/steve_ryan/testrepository_bitbucket.git
-					$this->writeJob('push ',$user.' http://bitbucket.org/'.$repo.'.git '.$branch.' '.$commitId);
+					$this->writeJob('push ',' http://bitbucket.org/'.$repo.'.git '.$branch.' '.$commitId.' '.$user);
 				}
 			}
 			
