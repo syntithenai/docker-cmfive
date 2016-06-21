@@ -1,10 +1,16 @@
 #!/bin/bash
 VHOST_ROOT_DOMAIN=code.2pisoftware.com
 DIR=`dirname $0`
+mkdir -p $DIR/jobscomplete
+mkdir -p $DIR/jobspending
+mkdir -p $DIR/jobsignored
+STARTDIR=`pwd`
   for i in `ls -d -1  $DIR/jobs/* 2> /dev/null | sort`; do
     action=`cat $i|cut --delimiter=' '  -f 1`
     repo=`cat $i|cut --delimiter=' '  -f 2`
     tag=`cat $i|cut  --delimiter=' '  -f 3`
+    filename=`basename $i`
+    mv $i $DIR/jobspending/
     #commit=`cat $i|cut  -f 4`
     #user=`cat $i|cut  -f 5`
     #echo "action $action "
@@ -20,6 +26,7 @@ DIR=`dirname $0`
 			repoDir=${repo////_}
 			repoDir=${repoDir/:/}
 			repoDir=${repoDir/ /}
+			repoLabel=${repo/_deploy/}
 			
 			tag=${tag/ /}
 			repoDir=${repoDir/git/$tag}
@@ -29,15 +36,23 @@ DIR=`dirname $0`
 			cd $folder
 			dockerTag=${repoName}:${tag}
 			dockerTagDot=${repoName}.${tag}
+			dockerTagUS=${repoName}_${tag}
 			git clone --depth=1 $repo 
 			cd $repoName
 			if [ -e Dockerfile ] 
 			then
+				echo "Build"
 				docker build -t $dockerTag .
 				#docker tag $dockerTag localhost:5000/$dockerTag
 				#docker push localhost:5000/$dockerTag
-				docker run -d -P -e VIRTUAL_HOST=$dockerTagDot.$VHOST_ROOT_DOMAIN $dockerTag &
-				#echo  "CREATED HOST $dockerTagDot.$VHOST_ROOT_DOMAIN";
+				echo "Run"
+				docker stop tag_$dockerTagUS
+				docker rm tag_$dockerTagUS
+				docker run --name=tag_$dockerTagUS -d -P -e VIRTUAL_HOST=$dockerTagDot.$VHOST_ROOT_DOMAIN $dockerTag &
+				echo  "CREATED HOST $dockerTagDot.$VHOST_ROOT_DOMAIN";
+				mv $STARTDIR/jobspending/$filename $STARTDIR/jobscomplete/
+			else 
+				mv $STARTDIR/jobspending/$filename $STARTDIR/jobsignored/
 			fi
 			
 		#fi 
@@ -45,10 +60,11 @@ DIR=`dirname $0`
 		#if [ $repo == "https://bitbucket.org/steve_ryan/testrepository_bitbucket.git" ]  
 		
 		#fi
-		
+	else
+		mv $STARTDIR/jobspending/$filename $STARTDIR/jobsignored/
 	fi	
-    rm $i;
+    
   done
-#echo "DONE";
+echo "DONE";
 
 
