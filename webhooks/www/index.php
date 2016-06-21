@@ -54,12 +54,12 @@ class WebHookHandler {
 			$user=$b->pusher->email;
 			// just the email
 			if (strpos($user,'<')!==false) {
-				$parts=split("<",$user);
+				$parts=explode("<",$user);
 				$user=substr($parts[1],0,-1);
 			} 
 			$gitId=$b->after;
 			$branch='master';
-			$branchParts=split("/",$b->ref);
+			$branchParts=explode("/",$b->ref);
 			if (count($branchParts)==3)  {
 				$branch=$branchParts[2];
 			}
@@ -97,7 +97,7 @@ class WebHookHandler {
 					}
 					// just the email
 					if (strpos($user,'<')!==false) {
-						$parts=split("<",$user);
+						$parts=explode("<",$user);
 						$user=substr($parts[1],0,-1);
 					} 
 					

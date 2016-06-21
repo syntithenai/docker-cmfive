@@ -9,7 +9,6 @@
 
 class DockerManager {
 	
-<<<<<<< HEAD
 	public $windows = false;  // are we running on ms windows
 	
 	public $images=[
@@ -52,32 +51,13 @@ class DockerManager {
 			throw new Exception('2picrm build not implemented');
 		} else {
 			throw new Exception ('No valid build specified');
-=======
-	public $conf={
-		'images':{
-			'2pisoftware/cmfive' : {
-				'repository': 'https://github.com/2pisoftware/cmfive.git',
-				'dockerFile': 'Dockerfile',
-				'composerFile': 'docker-compose.yml',
-			}
->>>>>>> master
 		}
 	};
 	
-	public $windows = false;  // are we running on ms windows
-	
-	
 	function run($argv) {		
-<<<<<<< HEAD
 		//if (strlen(trim(getenv('DOCKERMANAGER_WEB_ROOT')))==0) {
 			//echo "\nYou must set an environment variable for your web root\n";
 			//echo "For windows powershell ->\n \$env:DOCKERMANAGER_WEB_ROOT=\"/path/to/your/web/folder\" \nor relative to compose/project ie \n\$env:DOCKERMANAGER_WEB_ROOT=\"../../web\" \n";
-=======
-		if (false && strlen(trim(getenv('DOCKERMANAGER_WEB_ROOT')))==0) {
-			echo "\nYou must set an environment variable for your web root\n";
-			echo "For windows powershell ->\n \$env:DOCKERMANAGER_WEB_ROOT=\"/path/to/your/web/folder\" \nor relative to compose/project ie \n\$env:DOCKERMANAGER_WEB_ROOT=\"../../web\" \n";
->>>>>>> master
-						
 			//echo "For bash ->\n export DOCKERMANAGER_WEB_ROOT=/path/to/your/web/folder\n\n";
 			//die();
 		//}

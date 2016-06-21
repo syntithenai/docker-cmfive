@@ -10,23 +10,30 @@ if [ ! -f /db_is_setup ]; then
 	echo "=> Initializing DB with ${STARTUP_SQL}"
 	#cmfive migrations and dump file
 	chmod -R 777 /var/www/cmfive
-	echo "Wait for DB init"
-	sleep 20
-	# IMPORT SQL
-	# first wait for server
-	RET=1
-	while [[ RET -ne 0 ]]; do
-		echo "=> Websetup waiting for confirmation of MySQL service startup"
-		sleep 5
-		echo "server $RDS_HOSTNAME $MYSQL_USER"
+	# start the server
+	if [ -z "$RDS_HOSTNAME" ]
+	then
+		/usr/bin/mysqld_safe ${EXTRA_OPTS} > /dev/null 2>&1 &
+	fi
+
+	# Time out in 1 minute
+	LOOP_LIMIT=60
+	for (( i=0 ; ; i++ )); do
+		if [ ${i} -eq ${LOOP_LIMIT} ]; then
+			echo "Time out. Error log is shown as below:"
+			tail -n 100 ${LOG}
+			exit 1
+		fi
+		echo "=> Waiting for confirmation of MySQL service startup, trying ${i}/${LOOP_LIMIT} ..."
+		sleep 1
 		if [ -n "$RDS_HOSTNAME" ]
         then
-			mysql -h$RDS_HOSTNAME -u$RDS_USERNAME -p$RDS_PASSWORD  -e "status" > /dev/null 2>&1
+			mysql -h$RDS_HOSTNAME -u$RDS_USERNAME -p$RDS_PASSWORD  -e "status" > /dev/null 2>&1 && break
         else 
-			mysql -u$MYSQL_USER -p$MYSQL_PASS  -e "status" > /dev/null 2>&1
+			mysql -u$MYSQL_USER -p$MYSQL_PASS  -e "status" > /dev/null 2>&1 && break
 		fi
-	RET=$?
 	done
+
 	# MIGRATIONS
 	echo "Run migrations"
 	php -f /runmigrations.php
