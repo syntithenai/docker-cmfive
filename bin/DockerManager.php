@@ -1,12 +1,15 @@
 <?php 
 //alias dm=/home/ubuntu/projects/docks/docker-cmfive/bin/docker-manager.sh
 
+//export PATH=$PATH:/var/www/projects/testrunner/dev
+
 // FOR WINDOWS TO AVOID SSL ERRORS
 //git config --system http.sslverify false
 
 
 class DockerManager {
 	
+<<<<<<< HEAD
 	public $windows = false;  // are we running on ms windows
 	
 	public $images=[
@@ -49,48 +52,31 @@ class DockerManager {
 			throw new Exception('2picrm build not implemented');
 		} else {
 			throw new Exception ('No valid build specified');
+=======
+	public $conf={
+		'images':{
+			'2pisoftware/cmfive' : {
+				'repository': 'https://github.com/2pisoftware/cmfive.git',
+				'dockerFile': 'Dockerfile',
+				'composerFile': 'docker-compose.yml',
+			}
+>>>>>>> master
 		}
-		
-		$cmd='docker build -t '.$tag.' '.$buildPath;
-		//echo $cmd;
-		echo "Build image ".$image;
-		echo exec($cmd);
-	}
+	};
 	
-	function showCmfivePorts($container,$domain) {
-		$output=[];
-		echo "WEB:  ";
-		exec("docker port ".$container." 80",$output);
-		$parts=explode(':',$output[0]);
-		$subdomain=implode('.',array_slice(explode('.',$domain),1));
-		echo 'http://'.$domain." OR http://master.".$subdomain.':'.$parts[1];
-		echo "\n";
-		echo "SSH:  ";
-		exec("docker port ".$container." 22",$output);
-		$parts=explode(':',$output[0]);
-		echo $domain.':'.$parts[1];
-		echo "\n";
-		echo "MYSQL:  ";
-		exec("docker port ".$container." 3306",$output);
-		$parts=explode(':',$output[0]);
-		echo $domain.':'.$parts[1];
-		echo "\n";
-	}
-	
-	function showSeleniumPorts($container,$domain) {
-		echo "VNC:  ";
-		exec("docker port ".$container." 5900",$output);
-		$parts=explode(':',$output[0]);
-		echo $domain.'::'.$parts[1];
-		echo "\n";
-	}
-					
+	public $windows = false;  // are we running on ms windows
 	
 	
 	function run($argv) {		
+<<<<<<< HEAD
 		//if (strlen(trim(getenv('DOCKERMANAGER_WEB_ROOT')))==0) {
 			//echo "\nYou must set an environment variable for your web root\n";
 			//echo "For windows powershell ->\n \$env:DOCKERMANAGER_WEB_ROOT=\"/path/to/your/web/folder\" \nor relative to compose/project ie \n\$env:DOCKERMANAGER_WEB_ROOT=\"../../web\" \n";
+=======
+		if (false && strlen(trim(getenv('DOCKERMANAGER_WEB_ROOT')))==0) {
+			echo "\nYou must set an environment variable for your web root\n";
+			echo "For windows powershell ->\n \$env:DOCKERMANAGER_WEB_ROOT=\"/path/to/your/web/folder\" \nor relative to compose/project ie \n\$env:DOCKERMANAGER_WEB_ROOT=\"../../web\" \n";
+>>>>>>> master
 						
 			//echo "For bash ->\n export DOCKERMANAGER_WEB_ROOT=/path/to/your/web/folder\n\n";
 			//die();
@@ -110,17 +96,13 @@ class DockerManager {
 					break;
 				case 'up':
 					$this->showDiskSpace();
-		
 					// handle parameters
+					$image=$argv[2];
 					$composerFile='';
 					$name='';
 					$hostname='';
-					$gitUpdates='';
-					$composerFile=$argv[2];
-					if ($composerFile=="cmfive") {
-						//$this->buildImage($composerFile);
-					}	
-					
+					//$gitUpdates='';
+					$composerFile='';
 					if (empty($composerFile)) throw new Exception ('No composer file specified');
 					if (!empty($composerFile)) {
 						$composerFile=dirname(__FILE__).'/../compose/'.$composerFile.'/docker-compose.yml';
@@ -138,18 +120,18 @@ class DockerManager {
 					} else {
 						$hostname=$name.'.'.$this->getWildCardBaseDomain();
 					}
-					if (array_key_exists(5,$argv)) {
-						$commitId=$argv[5];
-					}
+					//if (array_key_exists(5,$argv)) {
+					///	$commitId=$argv[5];
+					//}
 	
 					// start instance
 					$containerNames=$this->ensureContainerIsRunning($composerFile,$name,$hostname);
-					$this->showCmfivePorts($containerNames['cmfivecomplete'],$hostname);
-					$this->showSeleniumPorts($containerNames['selenium'],$hostname);
+					//$this->showCmfivePorts($containerNames['cmfivecomplete'],$hostname);
+					//$this->showSeleniumPorts($containerNames['selenium'],$hostname);
 					
 					// git updates ??
-					$this->gitUpdates($containerNames['cmfivecomplete'],$gitUpdates);
-					$this->gitUpdates($containerNames['testrunner'],$gitUpdates);
+					//$this->gitUpdates($containerNames['cmfivecomplete'],$gitUpdates);
+					//$this->gitUpdates($containerNames['testrunner'],$gitUpdates);
 					$this->showDiskSpace();
 		
 					break;
@@ -259,6 +241,69 @@ class DockerManager {
 		}
 	}
 	
+	function createSwapDrive($container) {
+		echo exec('fallocate -l 2048M /swapfile');
+		echo exec('dd if=/dev/zero of=/swapfile bs=1M count=2048');
+		echo exec('chmod 600 /swapfile');
+		echo exec('mkswap /swapfile');
+		echo exec('swapon /swapfile');
+	}
+	
+	function killSwapDrive($container) {
+		echo exec('swapoff /swapfile');
+		echo exec('rm /swapfile');
+	}
+	
+	function buildImage($image,$version='') {
+		$buildPath='';
+		$tag='';
+		if ($image=='cmfive') {
+			$buildPath=dirname(__FILE__).'/../';
+			$tag='2pisoftware/cmfive';
+			if (strlen(trim($version))>0) $tag.=":".$version;
+		} else if (file_exists(dirname(__FILE__).'/../compose/'.$image."/Dockerfile"))  {
+			$buildPath=dirname(__FILE__).'/../compose/'.$image."/";
+			$tag='2pisoftware/'.$image;
+		} else if ($image=='2picrm') {
+			throw new Exception('2picrm build not implemented');
+		} else {
+			throw new Exception ('No valid build specified');
+		}
+		
+		$cmd='docker build -t '.$tag.' '.$buildPath;
+		//echo $cmd;
+		echo "Build image ".$image;
+		echo exec($cmd);
+	}
+	
+	function showCmfivePorts($container,$domain) {
+		$output=[];
+		echo "WEB:  ";
+		exec("docker port ".$container." 80",$output);
+		$parts=explode(':',$output[0]);
+		$subdomain=implode('.',array_slice(explode('.',$domain),1));
+		echo 'http://'.$domain." OR http://master.".$subdomain.':'.$parts[1];
+		echo "\n";
+		echo "SSH:  ";
+		exec("docker port ".$container." 22",$output);
+		$parts=explode(':',$output[0]);
+		echo $domain.':'.$parts[1];
+		echo "\n";
+		echo "MYSQL:  ";
+		exec("docker port ".$container." 3306",$output);
+		$parts=explode(':',$output[0]);
+		echo $domain.':'.$parts[1];
+		echo "\n";
+	}
+	
+	function showSeleniumPorts($container,$domain) {
+		echo "VNC:  ";
+		exec("docker port ".$container." 5900",$output);
+		$parts=explode(':',$output[0]);
+		echo $domain.'::'.$parts[1];
+		echo "\n";
+	}
+					
 	function ensureWebProxy() {
 		echo "\n";
 		$output=shell_exec('docker ps');
@@ -354,10 +399,6 @@ class DockerManager {
 		return $containerNames;
 	}
 	
-	function gitCommand($path) {
-		return $cmd;
-	}
-	
 	function selfUpdate() {
 		$path=realpath(dirname(__FILE__).'../');
 		$gitBin='/usr/bin/git';
@@ -370,10 +411,7 @@ class DockerManager {
 		//echo 
 		shell_exec($cmd);
 	}
-	
-	function build($repo) {
-		
-	}
+/*	
 						
 	function gitUpdates($containerName,$gitUpdates) {
 		// GIT CHECKOUT
@@ -407,14 +445,14 @@ class DockerManager {
 			}
 		}
 	}
-	
+	*/
 	
 	function getWildCardBaseDomain() {
 		if (file_exists(dirname(__FILE__)."/WILDCARD_DOMAIN"))  {
 			//return trim(file_get_contents(dirname(__FILE__)."/WILDCARD_DOMAIN"));
 			return "docker";
 		} else {
-			return "docker.code.2pisoftware.com";
+			return "docker";
 		}
 	}
 	
@@ -542,6 +580,7 @@ class DockerManager {
 	
 	// DISK SPACE
 	function showDiskSpace() {
+		return;
 		if ($this->windows) {
 			echo "\n";
 			$cmd="wmic logicaldisk get size,freespace,caption";
