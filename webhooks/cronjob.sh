@@ -1,4 +1,5 @@
 #!/bin/bash
+VHOST_ROOT_DOMAIN=code.2pisoftware.com
 DIR=`dirname $0`
   for i in `ls -d -1  $DIR/jobs/* 2> /dev/null | sort`; do
     action=`cat $i|cut --delimiter=' '  -f 1`
@@ -27,22 +28,27 @@ DIR=`dirname $0`
 			mkdir -p $folder
 			cd $folder
 			dockerTag=${repoName}:${tag}
+			dockerTagDot=${repoName}.${tag}
 			git clone --depth=1 $repo 
 			cd $repoName
 			if [ -e Dockerfile ] 
 			then
 				docker build -t $dockerTag .
+				#docker tag $dockerTag localhost:5000/$dockerTag
+				#docker push localhost:5000/$dockerTag
+				docker run -d -P -e VIRTUAL_HOST=$dockerTagDot.$VHOST_ROOT_DOMAIN $dockerTag &
+				#echo  "CREATED HOST $dockerTagDot.$VHOST_ROOT_DOMAIN";
 			fi
 			
-		#fi
+		#fi 
 		#cmfive
 		#if [ $repo == "https://bitbucket.org/steve_ryan/testrepository_bitbucket.git" ]  
 		
 		#fi
 		
 	fi	
-    
+    rm $i;
   done
-echo  "DONE";
+#echo "DONE";
 
 
