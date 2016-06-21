@@ -12,10 +12,10 @@ Config::set('system.timezone','Australia/Sydney');
 //========== Database Configuration ==========================
 
 Config::set("database", array(
-    "hostname"  => "localhost",
-    "username"  => "admin",
-    "password"  => "admin",
-    "database"  => "cmfive",
+    "hostname"  => $_SERVER['RDS_HOSTNAME'],
+    "username"  => $_SERVER['RDS_USERNAME'],
+    "password"  => $_SERVER['RDS_PASSWORD'],
+    "database"  => !empty($_SERVER['RDS_DB_NAME']) ?  $_SERVER['RDS_DB_NAME'] : "cmfive",
     "driver"    => "mysql"
 ));
 
