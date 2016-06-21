@@ -1,9 +1,0 @@
-nginxproxy:
-  image: jwilder/nginx-proxy
-  ports:
-    - "80:80"
-  volumes:
-    - nginxconf:/etc/nginx/conf.d
-    - /var/run/docker.sock:/tmp/docker.sock:ro
-    - ./templates:/etc/docker-gen/templates
-  restart: always     

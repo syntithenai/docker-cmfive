@@ -1,10 +1,8 @@
 #!/bin/bash
-echo "eek";
 
 set -e
 source /bd_build/buildconfig
 set -x
-echo "oooh";
 
 ## Temporarily disable dpkg fsync to make building faster.
 if [[ ! -e /etc/dpkg/dpkg.cfg.d/docker-apt-speedup ]]; then

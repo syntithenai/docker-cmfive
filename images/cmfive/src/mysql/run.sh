@@ -63,28 +63,9 @@ OnCreateDB()
         echo "Creating MySQL database ${ON_CREATE_DB}"
         mysql -uroot -e "CREATE DATABASE IF NOT EXISTS ${ON_CREATE_DB};"
         echo "Database created!"
-        #echo "Install CmFive and set permissions!"
-        #chmod -R 755 /var/www/cmfive
-        #chown -R www-data.www-data /var/www/cmfive
-        #/installcmfive.sh
-        #cp /var/www/cmfive/cache/install.sql /install.sql
-        #chmod -R 755 /var/www/cmfive
-        #chown -R www-data.www-data /var/www/cmfive
-        
     fi
 }
 
-ImportSql()
-{
-    for FILE in ${STARTUP_SQL}; do
-	    echo "=> Importing SQL file ${FILE}"
-        if [ "$ON_CREATE_DB" ]; then
-            mysql -uroot "$ON_CREATE_DB" < "${FILE}"
-        else
-            mysql -uroot < "${FILE}"
-        fi
-    done
-}
 
 # Main
 #if [ ${REPLICATION_MASTER} == "**False**" ]; then
@@ -125,20 +106,6 @@ if [ -f /var/lib/mysql/.EMPTY_DB ]; then
 fi
 
 
-# Import Startup SQL
-if [ -n "${STARTUP_SQL}" ]; then
-    if [ ! -f /sql_imported ]; then
-        echo "=> Initializing DB with ${STARTUP_SQL}"
-        #cmfive migrations and dump file
-        chmod -R 755 /var/www/cmfive
-        chown -R www-data.www-data /var/www/cmfive
-        /installcmfive.sh
-        chmod -R 755 /var/www/cmfive
-        chown -R www-data.www-data /var/www/cmfive
-        #ImportSql
-        touch /sql_imported
-    fi
-fi
 trap "kill -SIGQUIT $PID" INT
 wait
 
