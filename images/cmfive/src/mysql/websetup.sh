@@ -11,10 +11,10 @@ if [ ! -f /db_is_setup ]; then
 	#cmfive migrations and dump file
 	chmod -R 777 /var/www/cmfive
 	# start the server
-	if [ -z "$RDS_HOSTNAME" ]
-	then
-		/usr/bin/mysqld_safe ${EXTRA_OPTS} > /dev/null 2>&1 &
-	fi
+	#if [ -z "$RDS_HOSTNAME" ]
+	#then
+	#	service mysql start
+	#fi
 
 	# Time out in 1 minute
 	LOOP_LIMIT=60
