@@ -10,7 +10,7 @@
 
 class WebHookHandler {
 	
-	var $jobsFolder='../jobs/';
+	var $jobsFolder=realpath(dirname(__FILE__).'../jobs/');
 
 	function getAllHeaders() { 
 		$headers = ''; 
@@ -102,7 +102,7 @@ class WebHookHandler {
 					} 
 					
 					// git clone https://steve_ryan@bitbucket.org/steve_ryan/testrepository_bitbucket.git
-					$this->writeJob('push ',' http://bitbucket.org/'.$repo.'.git '.$branch.' '.$commitId.' '.$user);
+					$this->writeJob('push ',' git@bitbucket.org:'.$repo.'.git '.$branch.' '.$commitId.' '.$user);
 				}
 			}
 			
