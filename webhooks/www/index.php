@@ -10,8 +10,8 @@
 
 class WebHookHandler {
 	
-	var $jobsFolder=realpath(dirname(__FILE__).'../jobs/');
-
+	//var $jobsFolder=realpath(dirname(__FILE__)).'../jobs/';
+	var $jobsFolder=__DIR__.'/../jobs/';
 	function getAllHeaders() { 
 		$headers = ''; 
 		foreach ($_SERVER as $name => $value) { 
@@ -71,13 +71,14 @@ class WebHookHandler {
 			$user=''; //syntithenai@gmail.com';
 			$tagCount=0;
 			$commitCount=0;
+			
 			$branch='master';
 			if (!empty($b) &&  !empty($b->push) && is_array($b->push->changes)) {
 				// TAG
 				foreach ($b->push->changes as $change) {
 					if (!empty($change->new))  {
 						if ($change->new->type=="tag") {
-							$this->writeJob('tag','https://bitbucket.org/'.$repo.".git ".$change->new->name);
+							$this->writeJob('tag','git@bitbucket.org:'.$repo.".git ".$change->new->name);
 							$tagCount++;
 						} else if ($change->new->type=="branch") {
 							$commitCount++;
