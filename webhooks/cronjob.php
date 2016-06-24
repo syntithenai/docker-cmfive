@@ -1,10 +1,25 @@
-#!/bin/bash
-VHOST_ROOT_DOMAIN=code.2pisoftware.com
-DIR=`dirname $0`
-mkdir -p $DIR/jobs
-mkdir -p $DIR/jobscomplete
-mkdir -p $DIR/jobspending
-mkdir -p $DIR/jobsignored
+<?php 
+
+$VHOST_ROOT_DOMAIN=code.2pisoftware.com
+$DIR=__DIR__;
+mkdir($DIR.'/jobs',0777,true);
+mkdir($DIR.'/jobscomplete',0777,true);
+mkdir($DIR.'/jobspending',0777,true);
+mkdir($DIR.'/jobsignored',0777,true);
+
+foreach (glob($DIR."/jobs/*.txt") as $filename) {
+	$content = json_decode(file_get_contents($filename));
+	$request = new WebHookRequest($content['headers'],$content['body']);
+	echo "<hr>";
+	print_r($content);
+	echo "<hr>";
+	print_r([$request->isActionable(),$request->getRepositoryName(),$request->getRepositoryUrl(),$request->action(),$request->branch(),$request->version(),$request->tag()]);
+}
+
+
+exit;
+
+/*
 STARTDIR=`pwd`
   for i in `ls -d -1  $DIR/jobs/*.txt 2> /dev/null | sort`; do
     action=`cat $i|cut --delimiter=' '  -f 1`
@@ -71,3 +86,5 @@ STARTDIR=`pwd`
 echo "DONE";
 
 
+
+*/
