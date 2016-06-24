@@ -12,9 +12,8 @@ class WebHookRequest {
 	 * @param Array $body
 	 */
 	function __construct($headers,$body) {
-		$this->headers=$headers;
-		$this->body=$body;
-		$this->init();
+		$this->h=$headers;
+		$this->b=$body;
 	}
 	
 	/**
@@ -22,7 +21,7 @@ class WebHookRequest {
 	 * @return string
 	 */
 	function asJob() {
-		return json_encode(['headers'->$this->h,'body'=>$this->b]);
+		return json_encode(['headers'=>$this->h,'body'=>$this->b]);
 	}
 	
 	/**
@@ -33,7 +32,21 @@ class WebHookRequest {
 	 * @return boolean
 	 */
 	function isActionable($config) {
-		return true;
+		//[HTTP_USER_AGENT] => Bitbucket-Webhooks/2.0
+		if (array_key_exists(trim($this->getRepositoryUrl()),$config['repositories'])) {
+			$repo=$config['repositories'][trim($this->getRepositoryUrl())];
+			// require that the current action matches an available trigger
+			if (array_key_exists($this->getAction(),$repo['triggers'])) {
+				// allow for push subkey as branch
+				if ($this->getAction()=="push") {
+					if (array_key_exists($this->getBranch(),$repo['triggers']['push'])) {
+						echo "OK";
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 	
 	/** 
@@ -44,7 +57,7 @@ class WebHookRequest {
 		if (!empty($this->getTag()))  {
 			return 'tag';
 		} else if (!empty($this->getBranch()))  {
-			return 'branch';
+			return 'push';
 		}
 	}
 	

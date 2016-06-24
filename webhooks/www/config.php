@@ -21,7 +21,7 @@ $webHookConfig['repositories']=[
 	# cmfive 
 	'git@github.com:2pisoftware/cmfive.git' =>[
 		'triggers' => [
-			'tag' => ['
+			'dtag' => ['
 				# use cmfive_deploy repository to build image
 				git clone git@bitbucket.org:steve_ryan/cmfive_deploy.git $WEBHOOKBUILD_FOLDER
 				cd $WEBHOOKBUILD_FOLDER
@@ -33,7 +33,7 @@ $webHookConfig['repositories']=[
 				# sleep 3600 && docker stop tag_$dockerTagUS && docker rm tag_$dockerTagUS
 			'],
 			//'build','push:code.2pisoftware.com','deploy:code.2pisoftware.com',],
-			'push' => [
+			'dpush' => [
 				'development' => ['
 					
 				'],
@@ -45,15 +45,32 @@ $webHookConfig['repositories']=[
 		]
 	],
 	'git@bitbucket.org:steve_ryan/cmfive_deploy.git' => [
-	
+		'triggers' => [
+			'tag' =>'',
+			'push' => [
+				'master'=>''
+			]
+		]
 	],
 	# 2picrm
 	'git@bitbucket.org:2pisoftware/2picrm.git' => [
-		
+		'triggers' => [
+			'tag' =>'',
+			'push' => [
+				'master'=>''
+			]
+		]
 	],
 	'git@bitbucket.org:steve_ryan/crm_2pisoftware_deploy.git' => [
 		'deploymentkey' =>'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDZCOPdhCvqsBqoke37Kfk/9uoMYEt0J8987yENfPqAdxiQl+ZqVGhiIr2IgmBxPhkU+T8zJ/ZqytviR75HRoN/PFpSuBBN9AHjPvOlu0j/9BRexd0qx+5xMyLzr3tbddDCiEcXkt767EaGKZnPHNDew8ot5wdEV5prUIKhJcs5l6WKN6ZFBTTJ88N82ik6Fg2lRDDJuMZfU5PWjapLb0u5m/AfFzoBfC2IHZLQYHdYxSF4FMkdK7c+9Z0mAXLcNVBPWTiuogeuoD9EU/ENInmc/qYgSmpQb84brlNv5Ci/CNijP6WGT8Ic3NDw5jKY5uzGHleDgA9XICPPop7iIdl5 ubuntu@ip-172-31-15-105',
+		'triggers' => [
+			'tag' =>'',
+			'push' => [
+				'master'=>''
+			]
+		]
 	],
+	
 	
 ];
 

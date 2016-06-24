@@ -43,7 +43,7 @@ class WebHookHandler {
 	function run() {
 		$b=json_decode(@file_get_contents('php://input'));
 		$h=$this->getAllHeaders();
-		$trigger = new WebHookTrigger($h,$b);
+		$trigger = new WebHookRequest($h,$b);
 		$this->writeJob($trigger);   
 	}
 }
