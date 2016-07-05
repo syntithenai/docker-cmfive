@@ -115,14 +115,15 @@ Relevant files in the `docker-cmfive` repository include
 
 ## Setup of the code server
 
-`# Install docker  OR choose an Amazon instance type that includes docker
+`
+# Install docker  OR choose an Amazon instance type that includes docker
 # apt-get install docker-engine
 #Install nginx-proxy image for virtual hosting
 docker run -d -p 80:80 --restart=always -v /var/run/docker.sock:/tmp/docker.sock:ro jwilder/nginx-proxy
 #Install /opt/docker-cmfive management scripts
 cd /opt; git clone https://github.com/2pisoftware/docker-cmfive.git
 #Install webhooks image. 
-docker stop webhooks; docker rm webhooks; docker run -d -P --restart=always --name=webhooks -e VIRTUAL_HOST=webhook.code.2pisoftware.com -v /opt/docker-cmfive:/opt/docker-cmfive webhooks'
+docker stop webhooks; docker rm webhooks; docker run -d -P --restart=always --name=webhooks -e VIRTUAL_HOST=webhook.code.2pisoftware.com -v /opt/docker-cmfive:/opt/docker-cmfive webhooks
 #Install plain webserver at code.2pisoftware.com with host volume to /var/www
 docker stop code.2pisoftware.com; docker rm code.2pisoftware.com ; docker run --name code.2pisoftware.com -v /var/www:/usr/share/nginx/html -d -P -e VIRTUAL_HOST=code.2pisoftware.com nginx
 `
