@@ -14,7 +14,7 @@ Some actions may trigger deployment of the image to the code server as a virtual
 
 [More detail on working with the cmfive docker image](README.md)
 
-# Developer perspective
+## Developer perspective
 
 Developers can create a deployment repository for a client project that extends the cmfive or crm image. Using a Dockerfile to add custom modules, change database connection or other features, the image can be built and run locally in the same environment as test and production.
 
@@ -93,6 +93,30 @@ Source repositories involved in our CI process include
 	- On the code server filesystem, docker-cmfive is installed in the /opt folder.
 	- To run the webhooks image, mount the host filesystem version of `docker-cmfive`. `docker stop webhooks; docker rm webhooks; docker run -d -P --restart=always --name=webhooks -e VIRTUAL_HOST=webhook.code.2pisoftware.com -v /opt/docker-cmfive:/opt/docker-cmfive webhooks`
 	- The webhooks repository works together with the script docker-cmfive/webhooks/cronjob.php running as root from cron to enact the job files.
+
+
+
+Client deployment repositories can set environment variables to control the behavior of the parent image.
+[More detail on working with the cmfive docker image](README.md)
+
+`
+# DB CONNECTION/SETUP
+RDS_HOSTNAME=localhost 
+RDS_USERNAME=admin 
+RDS_PASSWORD=admin 
+RDS_DB_NAME=cmfive 
+STARTUP_SQL=/install.sql
+
+# ON BUILD
+GIT_VERSION_CMFIVE=master 
+# ON IMAGE START
+GIT_CMFIVE_BRANCH=
+GIT_CMFIVE_TAG=
+
+# FOR DEVELOPMENT IMAGES PRECONFIGURE GIT
+GIT_USER_NAME=
+GIT_USER_EMAIL=
+`
 
 
 #### Management Repositories
@@ -176,16 +200,38 @@ Add a cron job twice a day as root to generate certs and copy to docker registry
 #### Maintain user access to the registry
 
 The auth file /opt/registry_deploy/auth/htpasswd is mounted on the host so 
-`htpasswd /opt/registry_deploy/auth/htpasswd <newUser>` will ask for password and add a user.
+`htpasswd /opt/registry_deploy/auth/htpasswd <newUser>` run on the code server will ask for password and add a user.
 
 Edit the file to remove users.
 
 
 ### Ssh keys
-- To create a key set `ssh-keygen -t rsa -b 4096 -C "some label"`
-- on the code server in /root/.ssh
-two sets
 
+ssh deployment keys are required for automated access to private repositories.
+
+1. Deployment repositories may contain deployment keys. For example 2picrm_deploy includes the deployment keys to the 2picrm repository. See the Dockerfile for an example of using a deployment key.
+
+It is essential that deployment repositories that contain keys are private repositories themselves to protect the private key.
+
+2. Private deployment repositories will require their own ssh keys so that webhook tag requests can autonomously checkout the latest version onto the code server.
+
+- Add http://webhook.code.2pisoftware.com to the webhooks UI for the repository on github or bitbucket.
+- To create a key set `ssh-keygen -t rsa -b 4096 -C "secure key"`
+- Create a config section for the repository and include the public key.  Assuming you chose the default names id_rsa and id_rsa.pub, copy the contents of the private key id_rsa to the deployment keys web UI on bitbucket or github.
+- Copy the contents of the public key id_rsa.pub to a section matching the repository URL of the config file /opt/docker-cmfive/webhooks/www/config.php 
+		eg 
+		```
+			'git@bitbucket.org:steve_ryan/crm_2pisoftware_deploy.git' => [
+		'deploymentkey' =>'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDZCOPdhCvqsBqoke37Kfk/9uoMYEt0J8987yENfPqAdxiQl+ZqVGhiIr2IgmBxPhkU+T8zJ/ZqytviR75HRoN/PFpSuBBN9AHjPvOlu0j/9BRexd0qx+5xMyLzr3tbddDCiEcXkt767EaGKZnPHNDew8ot5wdEV5prUIKhJcs5l6WKN6ZFBTTJ88N82ik6Fg2lRDDJuMZfU5PWjapLb0u5m/AfFzoBfC2IHZLQYHdYxSF4FMkdK7c+9Z0mAXLcNVBPWTiuogeuoD9EU/ENInmc/qYgSmpQb84brlNv5Ci/CNijP6WGT8Ic3NDw5jKY5uzGHleDgA9XICPPop7iIdl5 ubuntu@ip-172-31-15-105',
+		'triggers' => [
+			'tag' =>'',
+			'push' => [
+				'master'=>''
+			]
+		]
+	],
+
+- 		```
 
 
 
