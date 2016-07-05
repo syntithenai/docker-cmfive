@@ -142,7 +142,9 @@ A username and password is required to access the registry. Details on how to ad
 The registry server requires an SSL certificate. A process for retrieving a letsencrypt certificate follows.
 
 As root
-```# 1. Install certbot 
+
+```
+# 1. Install certbot 
 mkdir /opt/certbot; cd /opt/certbot; wget https://dl.eff.org/certbot-auto;  chmod a+x certbot-auto
 # 2. Run once to install 
 # Choose the files in webroot option and select webroot as /var/www
@@ -184,32 +186,5 @@ Edit the file to remove users.
 two sets
 
 
-
-
--------------------------------------------------------------------------------------------
-
-# UPDate KEY
-#
-# self signed
-#sopenssl req -newkey rsa:4096 -nodes -sha256 -keyout certs/2pidockerregistry.key -x509 -days 365 -out certs/2pidockerregistry.crt
-
-# start
-#  docker build -t 2pisoftware/registry . ; docker stop registry; docker rm registry; docker run -d -p 5000:5000 --restart=always --name registry 2pisoftware/registry
-
-#docker stop registry; docker rm registry; docker run -d -p 5000:5000 --restart=always --name registry -v `pwd`/data:/var/lib/registry -v `pwd`/auth:/auth -e "REGISTRY_AUTH=htpasswd" -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm" -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd  -v `pwd`/certs:/certs  -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/fullchain.pem -e REGISTRY_HTTP_TLS_KEY=/certs/privkey.pem  registry:2
-# add a user
-#docker run --entrypoint htpasswd registry:2 -Bbn 2piuser 2pipassword > auth/htpasswd
-# OR htpasswd /opt/registry_deploy/auth/htpasswd <your new user>
-
-# code server plain nginx
-
-
-# certbot
-#wget https://dl.eff.org/certbot-auto
-#chmod a+x certbot-auto
-#certbot-auto - wizard, enter domain name and choose /var/www
-#certbot-auto certonly
-# cronjob 
-#18 1,14 * * *   root     /home/ubuntu/certbot-auto renew --quiet --no-self-upgrade
 
 
