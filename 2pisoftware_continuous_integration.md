@@ -97,9 +97,9 @@ Source repositories involved in our CI process include
 
 
 Client deployment repositories can set environment variables to control the behavior of the parent image.
-[More detail on working with the cmfive docker image](README.md)
+[For more detail on working with the cmfive docker image see the README](README.md)
 
-`
+```
 # DB CONNECTION/SETUP
 RDS_HOSTNAME=localhost 
 RDS_USERNAME=admin 
@@ -116,7 +116,7 @@ GIT_CMFIVE_TAG=
 # FOR DEVELOPMENT IMAGES PRECONFIGURE GIT
 GIT_USER_NAME=
 GIT_USER_EMAIL=
-`
+```
 
 
 #### Management Repositories
