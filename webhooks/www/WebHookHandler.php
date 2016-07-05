@@ -41,9 +41,13 @@ class WebHookHandler {
 	 * Handle the request
 	 */
 	function run() {
-		$b=json_decode(@file_get_contents('php://input'));
-		$h=$this->getAllHeaders();
-		$trigger = new WebHookRequest($h,$b);
-		$this->writeJob($trigger);   
+		try {
+			$b=json_decode(@file_get_contents('php://input'));
+			$h=$this->getAllHeaders();
+			$trigger = new WebHookRequest($h,$b);
+			$this->writeJob($trigger);   
+		} catch (Exception $e) {
+			echo "Invalid request";
+		}
 	}
 }
