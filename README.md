@@ -4,6 +4,8 @@ This repository contains the DockerFile and resources to build the  [2pisoftware
 
 This document provides details on working with the image and repository.
 
+See also [2PI CI](2pisoftware_continuous_integration.md)
+
 ## Getting started
 
 - [Install docker](https://docs.docker.com/engine/installation) and Kitematic GUI
