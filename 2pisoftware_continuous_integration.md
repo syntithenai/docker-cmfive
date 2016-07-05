@@ -115,7 +115,7 @@ Relevant files in the `docker-cmfive` repository include
 
 ## Setup of the code server
 
-`
+```
 # Install docker  OR choose an Amazon instance type that includes docker
 # apt-get install docker-engine
 #Install nginx-proxy image for virtual hosting
@@ -126,7 +126,7 @@ cd /opt; git clone https://github.com/2pisoftware/docker-cmfive.git
 docker stop webhooks; docker rm webhooks; docker run -d -P --restart=always --name=webhooks -e VIRTUAL_HOST=webhook.code.2pisoftware.com -v /opt/docker-cmfive:/opt/docker-cmfive webhooks
 #Install plain webserver at code.2pisoftware.com with host volume to /var/www
 docker stop code.2pisoftware.com; docker rm code.2pisoftware.com ; docker run --name code.2pisoftware.com -v /var/www:/usr/share/nginx/html -d -P -e VIRTUAL_HOST=code.2pisoftware.com nginx
-`
+```
 For the cronjob add the line `* *     * * *   root    /opt/docker-cmfive/webhooks/cronjob.sh >> /dev/null 2>&1`
 
 
@@ -142,7 +142,9 @@ A username and password is required to access the registry. Details on how to ad
 The registry server requires an SSL certificate. A process for retrieving a letsencrypt certificate follows.
 
 As root
-`# 1. Install certbot 
+
+```
+# 1. Install certbot 
 mkdir /opt/certbot; cd /opt/certbot; wget https://dl.eff.org/certbot-auto;  chmod a+x certbot-auto
 # 2. Run once to install 
 # Choose the files in webroot option and select webroot as /var/www
@@ -150,10 +152,11 @@ mkdir /opt/certbot; cd /opt/certbot; wget https://dl.eff.org/certbot-auto;  chmo
 /opt/certbot/certbot-auto
 # 3. Run again to obtain a certificate. Enter the domain code.2pisoftware.com.
 /opt/certbot/certbot-auto certonly 
-`
+```
 
 #### Install registry
-`
+
+```
 # grab the code
 cd /opt;
 git clone https://steve_ryan@bitbucket.org/steve_ryan/registry_deploy.git (you will need user/pass and bitbucket access to this repo)
@@ -164,7 +167,7 @@ docker build -t 2pisoftware/registry . ;
 cp /etc/letsencrypt/live/code.2pisoftware.com/* /opt/registry_deploy/certs/
 # run the registry with host volume mappings
 docker stop registry; docker rm registry; docker run -d -p 5000:5000 --restart=always --name registry -v /opt/registry_deploy/data:/var/lib/registry -v /opt/registry_deploy/auth:/auth   -v /opt/registry_deploy/certs:/certs  2pisoftware/registry
-`
+```
 #### Auto renew SSL certificates
 Add a cron job twice a day as root to generate certs and copy to docker registry
 
