@@ -1,23 +1,40 @@
-<?php 
+<?php
 
-$VHOST_ROOT_DOMAIN=code.2pisoftware.com
+require_once(__DIR__.'/www/config.php');
+require_once(__DIR__.'/www/WebHookRequest.php');
+
+
+//$VHOST_ROOT_DOMAIN="code.2pisoftware.com";
 $DIR=__DIR__;
-mkdir($DIR.'/jobs',0777,true);
-mkdir($DIR.'/jobscomplete',0777,true);
-mkdir($DIR.'/jobspending',0777,true);
-mkdir($DIR.'/jobsignored',0777,true);
+//echo "D:".$DIR;
+
+@mkdir($DIR.'/jobs',0777,true);
+@mkdir($DIR.'/jobscomplete',0777,true);
+@mkdir($DIR.'/jobspending',0777,true);
+@mkdir($DIR.'/jobsignored',0777,true);
 
 foreach (glob($DIR."/jobs/*.txt") as $filename) {
-	$content = json_decode(file_get_contents($filename));
-	$request = new WebHookRequest($content['headers'],$content['body']);
-	echo "<hr>";
-	print_r($content);
-	echo "<hr>";
-	print_r([$request->isActionable(),$request->getRepositoryName(),$request->getRepositoryUrl(),$request->action(),$request->branch(),$request->version(),$request->tag()]);
+        //echo "F:".$filename;
+        if ($filename!=="." && $filename != "..") {
+                $baseNameParts=explode(".",basename($filename));
+                $content = json_decode(file_get_contents($filename));
+                $request = new WebHookRequest($baseNameParts[0],$content->headers,$content->body);
+                //print_r([$request->isActionable($webHookConfig),$request->getRepositoryName(),$request->getRepositoryUrl(),$request->getAction(),$request->getBranch(),$request->getVersion(),$requ
+est->getTag()]);
+                if ($request->isActionable($webHookConfig)) {
+                        //rename($filename,$DIR.'/jobspending/'.basename($filename));
+                        $request->execute($webHookConfig);
+                        //rename($filename,$DIR.'/jobscomplete/'.basename($filename));
+                } else {
+                        //rename($filename,$DIR.'/jobsignored/'.basename($filename));
+                }
+
+        }
 }
 
 
 exit;
+
 
 /*
 STARTDIR=`pwd`
