@@ -20,7 +20,7 @@ Developers can create a deployment repository for a client project that extends 
 
 We have our own docker registry on the code server. The cmfive images built and hosted there are kept up to date with develop and master for the cmfive and cmfive-dev (and crm) images respectively. The docker hub images for cmfive and cmfive-dev are also kept up to date with pushes to git.
 
-By following the naming convention of XXX_deploy and adding a file Dockrrun.aws, the repository can be used to deploy to elastic beanstalk for production hosting when a deployment repository is tagged.
+By following the naming convention of XXX_deploy and adding a file Dockrrun.aws, the repository can be used to deploy to elastic beanstalk for production hosting that is redeployed when a deployment repository is tagged.
 
 Developers have easy access to docker images kept up to date with the latest master and develop branches.
 
@@ -73,8 +73,8 @@ Servers involved in our CI process include
 Source repositories involved in our CI process include
 
 - Application Repositories including `cmfive`, `2picrm`, `wiki`, `webdav` and `hosting` that provide application components.
-- Deployment Repositories including `crm_2pisoftware_deploy`, `webhooks_deploy`, `cmfive_deploy`, `cmfive-dev_deploy`, 	2picrm_deploy`,`2picrm-dev_deploy` which include a Dockerfile (and resources) for building an image and optionally a Dockerrun.aws for deployment to AWS.
-- Management Repositories including softare to drive the CI process.  Currently all the CI management software lives in the `docker-cmfive` repository. All software to assist with running tests is in the `testrunner` repository
+- Deployment Repositories including `crm_2pisoftware_deploy`, `webhooks_deploy`, `cmfive_deploy`, `cmfive-dev_deploy`, 	`2picrm_deploy`,`2picrm-dev_deploy` which include a Dockerfile (and resources) for building an image and optionally a Dockerrun.aws for deployment to AWS.
+- Management Repositories including software to drive the CI process.  The `webhooks_deploy` repository includes all the CI management software. The `registry_deploy` repository includes software for the 2pi software docker registry. All software to assist with running tests is in the `testrunner` repository
 
 #### Base Deployment Repositories
 
@@ -143,6 +143,14 @@ The actions taken by the CI system can be controlled by configuration.
 The configuration allows custom scripts to be attached per repository and per git trigger. Custom scripts can be built using shared component scripts for common actions.
 
 The configuration allows for a deployment key to be specified for a repository for automated checkout of private repositories.
+
+Variables are added to the environment in which the trigger scripts are run including
+
+- WEBHOOKBUILD_FOLDER
+- WEBHOOKBUILD_CONTAINERNAME
+- WEBHOOKBUILD_DOMAINNAME
+- WEBHOOKBUILD_TAG
+
 eg
 ```
 $webHookConfig['repositories']=[
@@ -212,7 +220,7 @@ mkdir /opt/certbot; cd /opt/certbot; wget https://dl.eff.org/certbot-auto;  chmo
 
 ```
 # grab the code
-cd /opt;
+cd  /opt;
 git clone https://steve_ryan@bitbucket.org/steve_ryan/registry_deploy.git (you will need user/pass and bitbucket access to this repo)
 # build the image
 cd /opt/registry_deploy
@@ -252,7 +260,7 @@ It is essential that deployment repositories that contain keys are private repos
 		eg 
 		```
 			'git@bitbucket.org:steve_ryan/crm_2pisoftware_deploy.git' => [
-		'deploymentkey' =>'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDZCOPdhCvqsBqoke37Kfk/9uoMYEt0J8987yENfPqAdxiQl+ZqVGhiIr2IgmBxPhkU+T8zJ/ZqytviR75HRoN/PFpSuBBN9AHjPvOlu0j/9BRexd0qx+5xMyLzr3tbddDCiEcXkt767EaGKZnPHNDew8ot5wdEV5prUIKhJcs5l6WKN6ZFBTTJ88N82ik6Fg2lRDDJuMZfU5PWjapLb0u5m/AfFzoBfC2IHZLQYHdYxSF4FMkdK7c+9Z0mAXLcNVBPWTiuogeuoD9EU/ENInmc/qYgSmpQb84brlNv5Ci/CNijP6WGT8Ic3NDw5jKY5uzGHleDgA9XICPPop7iIdl5 ubuntu@ip-172-31-15-105',
+		'deploymentkey' =>'ssh-rsa AAAAB3NzaC1yc2EAAAADx+5xMyLzr3tbddDCiEcXkt767EaGKZnPHNDew8ot5wdEV5prUIKhJcs5l6WKN6ZFBTTJ88N82ik6Fg2lRDDJuMZfU5PWjapLb0u5m/AfFzoBfC2IHZLQYHdYxSF4FMkdK7c+9Z0mAXLcNVBPWTiuogeuoD9EU/ENInmc/qYgSmpQb84brlNv5Ci/CNijP6WGT8Ic3NDw5jKY5uzGHleDgA9XICPPop7iIdl5 ubuntu@ip-172-31-15-105',
 		'triggers' => [
 			'tag' =>'',
 			'push' => [
