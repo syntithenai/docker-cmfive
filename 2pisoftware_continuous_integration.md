@@ -171,18 +171,18 @@ $webHookConfig['repositories']=[
 # apt-get install docker-engine
 #Install nginx-proxy image for virtual hosting
 docker run -d -p 80:80 --restart=always -v /var/run/docker.sock:/tmp/docker.sock:ro jwilder/nginx-proxy
-#Install /opt/docker-cmfive management scripts
-cd /opt; git clone https://github.com/2pisoftware/docker-cmfive.git
 #Install and build and run webhooks image. 
 cd /tmp
 git clone https://steve_ryan@bitbucket.org/steve_ryan/webhooks_deploy.git
 cd webhooks_deploy;
-docker build --no-cache -t 2pisoftware/webhooks .; docker stop webhooks; docker rm webhooks; docker run -d -P --restart=always --name=webhooks -e VIRTUAL_HOST=webhook.code.2pisoftware.com -v /opt/docker-cmfive:/opt/docker-cmfive 2pisoftware/webhooks
+docker build  -t 2pisoftware/webhooks .; docker stop webhooks; docker rm webhooks; docker run -d -P --restart=always --name=webhooks -e VIRTUAL_HOST=webhook.code.2pisoftware.com -v /opt/webhooks_deploy/jobs:/var/www/cmfive/jobs 2pisoftware/webhooks
 #Install plain webserver at code.2pisoftware.com with host volume to /var/www
 docker stop code.2pisoftware.com; docker rm code.2pisoftware.com ; docker run --name code.2pisoftware.com -v /var/www:/usr/share/nginx/html -d -P -e VIRTUAL_HOST=code.2pisoftware.com nginx
 ```
-For the cronjob add the line `* *     * * *   root    /opt/docker-cmfive/webhooks/cronjob.sh >> /dev/null 2>&1`
+For the cronjob add the line `* *     * * *   root    /opt/webhooks_deploy/src/webhooks/cronjob.sh >> /dev/null 2>&1`
 
+and 
+`chmod +x /opt/webhooks_deploy/src/webhooks/cronjob.sh`
 
 ### Registry Server
 The 2pisoftware docker registry server is available at `code.2pisoftware.com:5000`
