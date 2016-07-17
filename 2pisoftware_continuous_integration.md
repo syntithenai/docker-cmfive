@@ -554,7 +554,7 @@ For more detail about [working with the cmfive and 2picrm base images].
 # test push on testrepository_bitbucket
 cd /tmp
 rm -rf testrepository_bitbucket
-git clone --depth=1 https://git@bitbucket.org/2pisoftware/testrepository_bitbucket.git
+git clone --depth=1 https://steve_ryan@bitbucket.org/2pisoftware/testrepository_bitbucket.git
 rm /opt/webhooks_deploy/jobs/pending/*
 docker stop registry; rm -rf /opt/registry_deploy/data/docker/; docker start registry
 cd /tmp/testrepository_bitbucket/
@@ -567,7 +567,7 @@ git push
 
 
 # test tag on testrepository_bitbucket_deploy
-tag=1.3; cd /tmp && rm -rf testrepository_bitbucket_deploy && git clone --depth=1 https://git@bitbucket.org/2pisoftware/testrepository_bitbucket_deploy.git && cd /tmp/testrepository_bitbucket_deploy/ && git tag $tag && git push --tags 
+tag=1.3; cd /tmp && rm -rf testrepository_bitbucket_deploy && git clone --depth=1 https://steve_ryan@bitbucket.org/2pisoftware/testrepository_bitbucket_deploy.git && cd /tmp/testrepository_bitbucket_deploy/ && git tag $tag && git push --tags 
 
 
 
