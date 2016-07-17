@@ -20,7 +20,7 @@ Servers involved in our CI process include
 Source repositories involved in our CI process include
 
 - Application Repositories including `cmfive`, `2picrm`, `wiki`, `webdav` and `hosting` that provide application components.
-- Deployment Repositories including `crm_2pisoftware_deploy`, `webhooks_deploy`, `cmfive_deploy`, `cmfive-dev_deploy`, 	`2picrm_deploy`,`2picrm-dev_deploy` which include a Dockerfile (and resources) for building an image and optionally a Dockerrun.aws for deployment to AWS.
+- Deployment Repositories including `crm.2pisoftware.com_deploy`, `webhooks_deploy`, `cmfive_deploy`, `cmfive-dev_deploy`, 	`2picrm_deploy`,`2picrm-dev_deploy` which include a Dockerfile (and resources) for building an image and optionally a Dockerrun.aws for deployment to AWS.
 - Management Repositories including software to drive the CI process.  The `webhooks_deploy` repository includes all the CI management software. The `registry_deploy` repository includes software for the 2pi software docker registry. All software to assist with running tests is in the `testrunner` repository
 
 ##### Base Deployment Repositories
@@ -44,6 +44,10 @@ Source repositories involved in our CI process include
 #### Deployment Repositories
 
 Developers can create a deployment repository for a client project that extends the cmfive or crm image. 
+
+List images hosted on our registry at  https://code.2pisoftware.com:5000/v2/_catalog?n=10
+
+Clear all images from the registry  `docker stop registry; rm -rf /opt/registry_deploy/data/docker/; docker start registry`
 
 Any repository with a Dockerfile in its root folder can be built an run locally.
 
@@ -120,45 +124,21 @@ $webHookConfig['repositories']=[
 		'triggers' => [
 			'tag' => ['
 				# use cmfive_deploy repository to build image
-				git clone git@bitbucket.org:steve_ryan/cmfive_deploy.git $WEBHOOKBUILD_FOLDER
+				git clone git@bitbucket.org:2pisoftware/cmfive_deploy.git $WEBHOOKBUILD_FOLDER
 				cd $WEBHOOKBUILD_FOLDER
 				docker build -t $WEBHOOKBUILD_NAME .
 				rm -rf $WEBHOOKBUILD_FOLDER
 				docker stop $WEBHOOKBUILD_CONTAINERNAME
 				docker rm $WEBHOOKBUILD_CONTAINERNAME
 				docker run --name=$WEBHOOKBUILD_CONTAINERNAME -d -P -e VIRTUAL_HOST=$WEBHOOKBUILD_DOMAINNAME $WEBHOOKBUILD_TAG &
-				# sleep 3600 && docker stop tag_$dockerTagUS && docker rm tag_$dockerTagUS
+				# AWS EB DEPLOY
+				eb init --profile=eb-cli -r <YOURREGION> -k <YOURSSHKEYPAIR> --platform="Docker 1.11.1"
+				eb create -ip code.2pisoftware.com_registry
 			'],
 
 ```
 
-
-
-
-
-
-## Creating a Deployment Repository
-
-### Quickstart
-- create a respository named <XXXX>_deploy
-- clone the repository
-- create a file named Dockerfile in the repository root folder
-	- specify a base image
-	- ADD any resource file used to customise the image.
-- use bitbucket or github web UI to add webhook
-
-
-
-
-
-For private repositories
-- generate key pair
-- upload public key to bitbucket or github as a deployment key.
-- include the private key in the webhooks config file.
-
-
-For AWS EB (these steps will be part of scripted deployment)
-(ensure the AWS installation steps described below are complete.)
+### For AWS EB 
 
 - copy the file Dockerun.aws from the cmfive_deploy repository into the repository root folder.
 - run eb init in the repository root folder.
@@ -168,7 +148,26 @@ For AWS EB (these steps will be part of scripted deployment)
 
 
 
+
+
+## Creating a Deployment Repository
+
+### Quickstart
+- create and clone a repository named <XXXX>_deploy
+- create a file named Dockerfile in the repository root folder
+	- specify a base image
+	- ADD any resource file used to customise the image.
+	- ........
+- use bitbucket or github web UI to add webhook
+- create a deployment script and add it to the webhooks config file !!! (?? HOSTING MODULE)
+	- use some of the resource scripts(see the config file)  to simplify writing your deployment scripts
+
+
+### Overview
+
 A deployment repository is created for each client project that is part of our CI framework.
+
+The only way to update a clients website is to tag their deployment repository.
 
 The deployment repository includes a top level Dockerfile that typically extends our hosted cmfive or crm image, customising the config file and adding modules like the wiki.
 
@@ -222,6 +221,11 @@ CMD ["/sbin/my_init"]
 
 
 
+### For private repositories
+
+- generate key pair
+- upload public key to bitbucket or github as a deployment key.
+- include the private key in the webhooks config file.
 
 
 
@@ -254,7 +258,7 @@ Install eb-cli
 After installing the registry on the server and adding a user as described below.
 - login to the registry `docker login code.2pisoftware.com:5000`
 - Upload a (modified to remove auth key) version of the newly created auth config file to AWS S3.
-- Create an IAM security role named 2pi_docker_registry with S3 RO access and an inline policy to enable getObject on the uploaded file.
+- Create an IAM security role named 2pi_docker_registry with S3 RO access and an inline policy to enable getObject on the uploaded file (arn:aws:s3::::codeserver/config.json).
 - Use the security role in combination with the eb create command  `eb create -ip 2pi_docker_registry` in developing deployment scripts.
 - See [Use Private Docker Repositories with AWS Elastic Beanstalk](https://www.youtube.com/watch?v=pLw6MLqwmew)
 
@@ -269,7 +273,7 @@ After installing the registry on the server and adding a user as described below
 docker run -d -p 80:80 --restart=always -v /var/run/docker.sock:/tmp/docker.sock:ro jwilder/nginx-proxy
 #Install and build and run webhooks image. 
 cd /tmp
-git clone https://steve_ryan@bitbucket.org/steve_ryan/webhooks_deploy.git
+git clone https://2pisoftware@bitbucket.org/steve_ryan/webhooks_deploy.git
 cd webhooks_deploy;
 docker build  -t 2pisoftware/webhooks .; docker stop webhooks; docker rm webhooks; docker run -d -P --restart=always --name=webhooks -e VIRTUAL_HOST=webhook.code.2pisoftware.com -v /opt/webhooks_deploy/jobs:/var/www/cmfive/jobs 2pisoftware/webhooks
 #Install plain webserver at code.2pisoftware.com with host volume to /var/www
@@ -346,9 +350,10 @@ It is essential that deployment repositories that contain keys are private repos
 2. Private deployment repositories will require their own ssh keys so that webhook tag requests can autonomously checkout the latest version onto the code server.
 
 Copy the contents of the private deployment key to a section matching the repository URL of the config file /opt/docker-cmfive/webhooks/www/config.php 
-		eg 
-		```
-			'git@bitbucket.org:steve_ryan/crm_2pisoftware_deploy.git' => [
+eg
+ 
+```
+			'git@bitbucket.org:2pisoftware/crm_2pisoftware_deploy.git' => [
 		'deploymentkey' =>'Lzr3tbddDCiEcXkt767EaGKZnPHNDew8ot5wdEV5prUIKhJcs5l6WKN6ZFBTTJ88N82ik6Fg2lRDDJuMZfU5PWjapLb0u5m/AfFzoBfC2IHZLQYHdYxSF4FMkdK7c+9Z0mAXLcNVBPWTiuogeuoD9EU/ENInmc/qYgSmpQb84brlNv5Ci/CNijP6WGT8Ic3NDw5jKY5uzGHleDgA9XICPPop7iIdl5',
 		'triggers' => [
 			'tag' =>'',
@@ -358,7 +363,7 @@ Copy the contents of the private deployment key to a section matching the reposi
 		]
 	],
 
-- 		```
+```
 
 
 
@@ -372,10 +377,6 @@ Bitbucket offers IP ranges.
 The deployment process requires the use of encryption keys which are in some cases stored in (private) repositories.
 Developers must be vigilant not to leave keys lying around.
 
-AWS provides fine grained access controls using roles. 
-
-
-arn:aws:s3::::codeserver/config.json
 
 
 
@@ -545,3 +546,44 @@ For more detail about [working with the cmfive and 2picrm base images].
 
 -------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------
+
+
+## Test/Development Scripts
+
+```
+# test push on testrepository_bitbucket
+cd /tmp
+rm -rf testrepository_bitbucket
+git clone --depth=1 https://git@bitbucket.org/2pisoftware/testrepository_bitbucket.git
+rm /opt/webhooks_deploy/jobs/pending/*
+docker stop registry; rm -rf /opt/registry_deploy/data/docker/; docker start registry
+cd /tmp/testrepository_bitbucket/
+echo "more stuff"  >> readme.txt
+git add readme.txt
+git commit -m "add to readme"
+git push 
+
+&& sleep 15 && /opt/webhooks_deploy/src/webhooks/cronjob.sh
+
+
+# test tag on testrepository_bitbucket_deploy
+tag=1.3; cd /tmp && rm -rf testrepository_bitbucket_deploy && git clone --depth=1 https://git@bitbucket.org/2pisoftware/testrepository_bitbucket_deploy.git && cd /tmp/testrepository_bitbucket_deploy/ && git tag $tag && git push --tags 
+
+
+
+&& sleep 15 && /opt/webhooks_deploy/src/webhooks/cronjob.sh
+
+
+
+# CRON BUILD
+
+# test image
+ rm -rf /tmp/testrepository_bitbucket && cd /tmp && git clone --depth 1 https://git@bitbucket.org/2pisoftware/testrepository_bitbucket.git /tmp/testrepository_bitbucket && cd /tmp/testrepository_bitbucket && docker build -t 2pisoftware/testrepository_bitbucket . && rm -rf /tmp/testrepository_bitbucket && docker tag -f 2pisoftware/testrepository_bitbucket code.2pisoftware.com:5000/2pisoftware/testrepository_bitbucket:latest && docker push code.2pisoftware.com:5000/2pisoftware/testrepository_bitbucket:latest
+
+
+# test deploy
+env=development && rm -rf /tmp/testrepository_bitbucket_deploy && cd /tmp && git clone https://git@bitbucket.org/2pisoftware/testrepository_bitbucket_deploy.git && cd /tmp/testrepository_bitbucket_deploy &&	eb init --profile=eb-cli -r us-west-2 -k syntithenaicmfive --platform="Docker 1.11.1"  && if [ ` eb list|grep $env|wc -w` -gt 0 ]; then echo "eb deploy"; eb deploy; else	echo "eb create -ip code.2pisoftware.com_registry $env"; eb create -ip code.2pisoftware.com_registry $env ; fi
+
+
+
+```
