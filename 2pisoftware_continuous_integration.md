@@ -84,20 +84,20 @@ GIT_USER_EMAIL=
 
 #### Management Repositories
 
-##### CI scripts `docker-cmfive`
+##### CI scripts `webhooks_deploy`
 
-! This repository used to contain deploy images for cmfive. These have all been refactored into individual deployment repositories.
+The webhooks_deploy repository is installed on the code server and used to provide a cron job and sharing job queue files with the webhooks_deploy instance.
 
 Relevant files in the `docker-cmfive` repository include
-- webhooks
+- src/webhooks
+	- config.php   - list of allowed repositories and trigger scripts.
 	- www
 		- index.php - webserver glue
-		- config.php   - list of allowed repositories and trigger scripts.
+		
 		- WebHookHandler.php - controller for webhook single action.
 		- WebHookRequest.php - encapsulate Webhook request interpretation for bitbucket and github.
 	- cronjob.php  (run with php -f ) enact job files based on config.php
-- bin
-   - DockerManager scripts currently defunct.
+- jobs/*   - job queue
 
 ###### Configuration
 
@@ -120,7 +120,7 @@ eg
 $webHookConfig['repositories']=[
 	# cmfive 
 	'git@github.com:2pisoftware/cmfive.git' =>[
-		'deploymentkey' =>'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDZCOPdhCvqsBqoke37Kfk/9uoMYEt0J8987yENfPqAdxiQl+ZqVGhiIr2IgmBxPhkU+T8zJ/ZqytviR75HRoN/PFpSuBBN9AHjPvOlu0j/9BRexd0qx+5xMyLzr3tbddDCiEcXkt767EaGKZnPHNDew8ot5wdEV5prUIKhJcs5l6WKN6ZFBTTJ88N82ik6Fg2lRDDJuMZfU5PWjapLb0u5m/AfFzoBfC2IHZLQYHdYxSF4FMkdK7c+9Z0mAXLcNVBPWTiuogeuoD9EU/ENInmc/qYgSmpQb84brlNv5Ci/CNijP6WGT8Ic3NDw5jKY5uzGHleDgA9XICPPop7iIdl5 ubuntu@ip-172-31-15-105',
+		'deploymentkey' =>'sAQABAAABAQDZCOPdhCvqsBqoke37Kfk/9uoMYEt0J8987yENfPqAdxiQl+ZqVGhiIr2IgmBxPhkU+T8zJ/ZqytviR75HRoN/PFpSuBBN9AHjPvOlu0j/9BRexd0qx+5xMyLzr3tbddDCiEcXkt767EaGKZnPHNDew8ot5wdEV5prUIKhJcs5l6WKN6ZFBTTJ88N82ik6Fg2lRDDJuMZfU5PWjapLb0u5m/AfFzoBfC2IHZLQYHdYxSF4FMkdK7c+9Z0mAXLcNVBPWTiuogeuoD9EU/ENInmc/qYgSmpQb84brlNv5Ci/CNijP6WGT8Ic3NDw5jKY5uzGHleDg',
 		'triggers' => [
 			'tag' => ['
 				# use cmfive_deploy repository to build image
