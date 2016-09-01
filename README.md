@@ -210,21 +210,173 @@ As you add containers it can be handy to refer to them by domain name.
 1. A DNS proxy will allow wildcard domain configuration (as compared to tweaking hosts entry). Acrylic DNS proxy works well on windows. 
 DNS entries need to point to the virtual box IP address on windows.
 2. Install and run nginx-proxy docker image using DOCKER CLI powershell. 
-  `docker run -d -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock:ro jwilder/nginx-proxy`
+  `docker run --name nginxproxy --restart always -d -p 80:80 -p 443:443 -v /etc/nginxcerts:/etc/nginx/certs -v /var/run/docker.sock:/tmp/docker.sock:ro jwilder/nginx-proxy`
 3. Restart your container with VIRTUAL_HOST set as an environment veriable and nginx-proxy will pick up the changes and detect the container port then create virtual host entries for nginx.
   `docker run -e VIRTUAL_HOST=foo.bar.com ...`
 For more details see https://hub.docker.com/r/jwilder/nginx-proxy <https://hub.docker.com/r/jwilder/nginx-proxy>
 
+## Automatic SSL
+
+The images contain a script that is run at image startup to generate and configure SSL certificates.
+
+The generated certificates are used
+- inside the running container with nginx.
+- by nginx-proxy on the code server through a host mount to a shared certificates folder.
+- to upload and deploy to the AWS load balancer
+
+The behavior depends on environment variables and available volumes
+1. SSL_HOST is required to trigger any SSL support and VIRTUAL_HOST is required and must match.
+2. If SSL_CERT and SSL_KEY are contain paths to files that exist, those files will be used for SSL configuration instead of generating them.
+
+3. If /etc/nginxcerts is available, certificates are exported to that folder for nginx-proxy
+4. If AWS variables are available, the certificate is deployed to the AWS load balancer.
+# AWS_USER=AKIAJVKTBVY7KVVLT3IQ 
+# AWS_PASS=ZQOrpL3GE6z6qKCJ+a4IPzE1JelvlJu2cg0qiW3b
+# AWS_REGION=us-west-2
+
+Environment variables can be set in the Dockerfile of deployment repositories or at runtime.
 
 
+### DNS Delegation
+
+The SSL generation using letsencrypt requires that the domain for which a certificate is generated is delegated to the running container before it starts.
+
+For the code server the ip is 52.64.247.205  . All subdomains of code.2pisoftware.com are already delegated to this ip address.
+
+For AWS EB deployments, you can create a CNAME record for the subdomain to be directed to the instance.
+Where the deployment is triggered with the -c parameter, the target of the CNAME should be $name.$region.elasticbeanstalk.com
+
+```
+eb init --profile=default -r us-west-2  --platform="Docker 1.11.1"
+eb create -c  crm-syntithenai-com -ip code.2pisoftware.com_registry production
+```
+then create a CNAME record for crm (as a subdomain of syntithenai.com) pointed to crm-syntithenai-com.us-west-2.elasticbeanstalk.com BEFORE deploying the image.
+
+Alternatively for AWS EB deployments, you can delegate domain resolution to AWS Route53 so that the domain can be dynamically delegated to the load balancer. Create an AWS Hosted Zone to discover the aws name servers for your domain then delegate the domain (or subdomain) by creating NS records or setting DNS servers for the domain in your domain management tool. 
+
+
+
+### On the Code Server
+
+Nginx-proxy must be told about the certificates folder for this to work
+```
+docker run -d -p 80:80 -p 443:443 -v /etc/nginxcerts:/etc/nginx/certs -v /var/run/docker.sock:/tmp/docker.sock:ro jwilder/nginx-proxy
+```
+
+The host mount for shared certificates must be at runtime (host mounting using the dockerfile is no longer possible). This means that if you are using the code server and want SSL you must include ```-v /etc/nginxcerts:/etc/nginxcerts``` in your run command.
+```
+docker run --name myssl -d -P -e VIRTUAL_HOST=myssl.code.2pisoftware.com -e SSL_HOST=myssl.code.2pisoftware.com -v /etc/nginxcerts:/etc/nginxcerts 2pisoftware/cmfive
+```
+
+The repository deploy_crm.code.2pisoftware.com is intended to be used this way. It encapsulates the environment variables and can be used by  
+```
+docker build -t crm.code.2pisoftware.com .
+docker run -d -P -v  /etc/nginxcerts:/etc/nginxcerts  crm.code.2pisoftware.com
+```
+
+### AWS Deployment
+
+Environment vars set in the Dockerfile 
+```
+ENV VIRTUAL_HOST=myssl.syntithenai.com 
+ENV SSL_HOST=myssl.syntithenai.com
+ENV AWS_USER=AKIAJVKTBVY7KVVLT3IQ 
+ENV AWS_PASS=ZQOrpL3GE6z6qKCJ+a4IPzE1JelvlJu2cg0qiW3b
+ENV AWS_REGION=us-west-2
+#
+# SSL_CERT and SSL_KEY can contain the path to pregenerated key and certificate files.
+# the files would need to be added using ADD in the Dockerfile or volume mounts at runtime.
+ADD aa.key /aa.key
+ENV SSL_KEY=/aa.key
+ADD aa.cert /aa.cert
+ENV SSL_KEY=/aa.cert
+```
+
+The repository deploy_crm.syntithenai.com is an example of a deployment repository tailored for AWS deployment.
+
+VIRTUAL_HOST=crm.syntithenai.com
+VIRTUAL_HOST_KEY=crm-syntithenai-com
+SSH_KEYPAIR=syntithenaicmfive
+REGION=us-west-2
+ENVIRONMENT=live
+
+# DEPLOY
+git clone https://steve_ryan@bitbucket.org/steve_ryan/deploy_$VIRTUAL_HOST.git
+cd deploy_crm.aws.syntithenai.com
+eb init --profile=default -r $REGION -k $SSH_KEYPAIR --platform="Docker 1.11.1"
+eb create -c  $VIRTUAL_HOST_KEY -ip code.2pisoftware.com_registry $ENVIRONMENT
+
+
+
+### Advanced DNS using route53
+
+```
+zoneId=`aws route53 list-hosted-zones --query 'HostedZones[*].[Name,Id]' --output text|grep $VIRTUAL_HOST|cut -f 2|cut -d / -f 3`
+if [ -z $zoneId ]; then
+echo create hosted zone for $VIRTUAL_HOST
+aws route53  create-hosted-zone --name $VIRTUAL_HOST --caller-reference code_$VIRTUAL_HOST;
+zoneId=`aws route53 list-hosted-zones --query 'HostedZones[*].[Name,Id]' --output text|grep $VIRTUAL_HOST|cut -f 2|cut -d / -f 3`;
+echo zone id for new hosted zone is $zoneId
+else 
+ echo hosted zone already exists for $VIRTUAL_HOST
+fi;
+
+# LOG NAMESERVERS FOR EXTERNAL DELEGATION
+nameServers=`aws route53 get-hosted-zone --id $zoneId --query DelegationSet.NameServers --output=text`
+echo "DELEGATE $VIRTUAL_HOST to $nameServers";
+```
+
+
+#### Scripted domain name management 
+```
+aws route53 list-hosted-zones --query 'HostedZones[*].[Name,Id]' --output text|grep $VIRTUAL_HOST_KEY.$REGION.elasticbeanstalk.com|cut -f 2|cut -d / -f 3
+
+# CREATE RECORD SET FOR HOSTED ZONE WITH A RECORD AS ALIAS TO LOAD BALANCER
+filestuff='{
+  "Comment": "ADD alias A record pointed to load balancer",
+  "Changes": [
+    {
+      "Action": "CREATE",
+      "ResourceRecordSet": {
+        "Name": "$VIRTUAL_HOST",
+        "Type": "A",
+        "AliasTarget": {
+          "HostedZoneId": "$zoneId",
+          "DNSName": "$VIRTUAL_HOST_KEY.$REGION.elasticbeanstalk.com",
+          "EvaluateTargetHealth": "false"
+        }
+      }
+    }
+  ] 
+}'
+
+sub=${filestuff/\$REGION/$REGION};
+sub=${sub/\$VIRTUAL_HOST_KEY/$VIRTUAL_HOST_KEY};
+sub=${sub/\$zoneId/$zoneId};
+echo ${sub/\$VIRTUAL_HOST/$VIRTUAL_HOST} > /tmp/recordset-$VIRTUAL_HOST_KEY.json ;
+aws route53 change-resource-record-sets --hosted-zone-id $zoneId --change-batch file:///tmp/recordset-$VIRTUAL_HOST_KEY.json
+```
 
 
 ## Modifying the image
-It may be appropriate to update the docker build file to make changes and rebuild the base image.  
+
+In general, any changes to the image should be trialed in an extension image first.
+Create a new repository and Dockerfile that is FROM the base image and make changes there.
+
+After ensuring the changes are good, update the docker build file  rebuild the base image.  
 The [docker build file](https://raw.githubusercontent.com/syntithenai/docker-cmfive/master/Dockerfile) is available as part of the docker-cmfive repository.   
 
 Checkout and change directory to the docker-cmfive repository then run  
 `docker build -t 2pisoftware/cmfive . `  
+
+Tag the image
+`docker tag -f 2pisoftware/com code.2pisoftware.com:5000/2pisoftware/cmfive`
+
+To upload the built image to docker hub
+```
+(docker login)
+docker push code.2pisoftware.com:5000/2pisoftware/cmfive
+```
 
 The image is based on phusion/baseimage. Detailed instructions on adding services, startup scripts and other modifications is available at [phusion.github.io](http://phusion.github.io/baseimage-docker) and [blog](https://github.com/phusion/baseimage-docker)
 
@@ -232,11 +384,6 @@ The image incorporates elements from the Dockerfiles for the selenium project.
 
 The image configures a Php, nginx, mysql environment with cmfive source code.
 
-To upload the built image to docker hub
-
-`docker login
-docker push <mylogin>/<image>
-docker pull <mylogin>/<image>`
 
 
 
@@ -245,37 +392,10 @@ docker pull <mylogin>/<image>`
             jonathan.bergknoff.com > Journal > Building-good-docker-images <http://jonathan.bergknoff.com/journal/building-good-docker-images> <http://jonathan.bergknoff.com/journal/building-good-docker-images>>
             crosbymichael.com > Dockerfile-best-practices <http://crosbymichael.com/dockerfile-best-practices.html> <http://crosbymichael.com/dockerfile-best-practices.html>>
 
-## Docker container suite
 
-!! THE FOLLOWING SECTION IS EXPERIMENTAL AND IN DEVELOPMENT
-
-The repository includes composer suites to start a collection of images.
-The cmfive composer suite starts containers for web, db, testrunner and selenium. 
-
-- Checkout https://github.com/2pisoftware/docker-cmfive 
-- Use bin/docker-manager.sh 
-`XX/bin/docker-manager.sh up cmfive mysite
-XX/bin/docker-manager.sh down cmfive mysite
-` 
-There are composer suites for a general webserver and a webdav server included in the repository.
-`XX/bin/docker-manager.sh up webdav mydav
-
-The manager suite also provides commands for 
-
-- build
-- killall [reallytruly] - reallytruly will stop and remove all running containers, otherwise just cleanup
-- clean
-- test  
-
-In the cmfive image, the web, db and testrunner all use the cmfive base image so there is little overhead in having multiple hosts. The hosts are split to avoid a problem with circular dependancies in docker compose v1 format. v2 format offers easier network configuration but is not compatible with the proxy approach to virtual hosting described below.
-
-All the compose suites assume that an environment variable DOCKERMANAGER_WEB_ROOT is set to a path on your local filesystem where you store websites which is volume mapped as the www or data folder for the images. 
-
-Before using the cmfive or 2picrm images, the mapped web folder needs to be primed with a cmfive and testrunner installations.
-If you run the image without composer as described in the QuickStart section above, you can copy everything you need from the container to your local file system using 
-`docker cp cmfivecomplete_1:/var/www C:\Users\User\Desktop\`
-OR ssh access as described below.
 
 ## Security
 These images are hopelessly insecure with published default passwords for important services and a published key for root login. 
+
+
 

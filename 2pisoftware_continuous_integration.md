@@ -269,13 +269,16 @@ After installing the registry on the server and adding a user as described below
 ```
 # Install docker  OR choose an Amazon instance type that includes docker
 # apt-get install docker-engine
+
 #Install nginx-proxy image for virtual hosting
 docker run -d -p 80:80 --restart=always -v /var/run/docker.sock:/tmp/docker.sock:ro jwilder/nginx-proxy
+
 #Install and build and run webhooks image. 
 cd /tmp
 git clone https://2pisoftware@bitbucket.org/steve_ryan/webhooks_deploy.git
 cd webhooks_deploy;
-docker build  -t 2pisoftware/webhooks .; docker stop webhooks; docker rm webhooks; docker run -d -P --restart=always --name=webhooks -e VIRTUAL_HOST=webhook.code.2pisoftware.com -v /opt/webhooks_deploy/jobs:/var/www/cmfive/jobs 2pisoftware/webhooks
+docker stop webhooks; docker rm webhooks; docker run -d -P --restart=always --name=webhooks -e VIRTUAL_HOST=webhook.code.2pisoftware.com -v /opt/webhooks_deploy/src/webhooks/www:/var/www/cmfive/ -v /opt/webhooks_deploy/jobs:/var/www/cmfive/jobs  2pisoftware/webhooks
+
 #Install plain webserver at code.2pisoftware.com with host volume to /var/www
 docker stop code.2pisoftware.com; docker rm code.2pisoftware.com ; docker run --name code.2pisoftware.com -v /var/www:/usr/share/nginx/html -d -P -e VIRTUAL_HOST=code.2pisoftware.com nginx
 ```
@@ -561,17 +564,11 @@ cd /tmp/testrepository_bitbucket/
 echo "more stuff"  >> readme.txt
 git add readme.txt
 git commit -m "add to readme"
-git push 
-
-&& sleep 15 && /opt/webhooks_deploy/src/webhooks/cronjob.sh
+git push && sleep 15 && /opt/webhooks_deploy/src/webhooks/cronjob.sh
 
 
 # test tag on testrepository_bitbucket_deploy
-tag=1.3; cd /tmp && rm -rf testrepository_bitbucket_deploy && git clone --depth=1 https://steve_ryan@bitbucket.org/2pisoftware/testrepository_bitbucket_deploy.git && cd /tmp/testrepository_bitbucket_deploy/ && git tag $tag && git push --tags 
-
-
-
-&& sleep 15 && /opt/webhooks_deploy/src/webhooks/cronjob.sh
+tag=1.9; cd /tmp && rm -rf testrepository_bitbucket_deploy && git clone --depth=1 https://steve_ryan@bitbucket.org/2pisoftware/testrepository_bitbucket_deploy.git && cd /tmp/testrepository_bitbucket_deploy/ && git tag $tag && git push --tags && sleep 15 && /opt/webhooks_deploy/src/webhooks/cronjob.sh
 
 
 
