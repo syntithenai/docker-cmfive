@@ -300,12 +300,13 @@ SSH_KEYPAIR=syntithenaicmfive
 REGION=us-west-2
 ENVIRONMENT=live
 
-# DEPLOY
+To deploy the repository
+```
 git clone https://steve_ryan@bitbucket.org/steve_ryan/deploy_$VIRTUAL_HOST.git
 cd deploy_crm.aws.syntithenai.com
 eb init --profile=default -r $REGION -k $SSH_KEYPAIR --platform="Docker 1.11.1"
 eb create -c  $VIRTUAL_HOST_KEY -ip code.2pisoftware.com_registry $ENVIRONMENT
-
+```
 
 
 ### Advanced DNS using route53
